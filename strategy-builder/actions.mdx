@@ -1,0 +1,97 @@
+---
+title: "Actions"
+description: "Use actions to move capital or trade market outcomes."
+---
+
+An action is a capital movement or trade execution step.
+
+In strategy JSON, an action node has `type: "ACTION"` and an `action` object.
+
+## Action types
+
+| `action_type` | Meaning |
+| --- | --- |
+| `BUY_MARKET_OUTCOME` | Buy a market outcome. |
+| `SELL_MARKET_OUTCOME` | Sell a market outcome. |
+| `HOLD` | Hold a market outcome. |
+| `MOVE_TO_WALLET` | Move capital to a wallet target. |
+| `MOVE_TO_VAULT` | Move capital to a vault target. |
+
+## Market target
+
+Market actions require a `target.market` object.
+
+```json
+{
+  "action_type": "BUY_MARKET_OUTCOME",
+  "allocation_pct": 100,
+  "target": {
+    "venue": "POLYMARKET",
+    "market": {
+      "market_id": "btc-above-100k-may-2026",
+      "outcome_token": "YES",
+      "token_id": "1234567890",
+      "current_price": 0.52
+    }
+  }
+}
+```
+
+Use `current_price` when you want validation to estimate the required minimum principal more accurately.
+
+## Allocation
+
+Use `allocation_pct` when an action belongs to a split decision group.
+
+In `SPLIT_100` mode, all selected actions must include `allocation_pct`, and the total must equal `100`.
+
+For `SINGLE` mode, one action receives the selected capital.
+
+## Wallet target
+
+Use `MOVE_TO_WALLET` when the strategy should exit to a wallet target.
+
+```json
+{
+  "action_type": "MOVE_TO_WALLET",
+  "target": {
+    "wallet": {
+      "wallet_id": "primary-wallet",
+      "wallet_name": "Primary wallet"
+    }
+  }
+}
+```
+
+## Vault target
+
+Use `MOVE_TO_VAULT` when the strategy should move capital to a vault target.
+
+```json
+{
+  "action_type": "MOVE_TO_VAULT",
+  "target": {
+    "vault": {
+      "vault_id": "cash-vault",
+      "vault_name": "Cash vault"
+    }
+  }
+}
+```
+
+## Risk guards
+
+Risk guards are optional. They define execution limits for market actions.
+
+```json
+{
+  "risk_guards": {
+    "min_edge_bps": 50,
+    "max_spread_bps": 100,
+    "max_slippage_bps": 75,
+    "max_data_staleness_sec": 10
+  }
+}
+```
+
+If a risk guard fails, the action should not execute under the stale or unfavorable condition.

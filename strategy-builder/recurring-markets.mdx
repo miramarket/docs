@@ -1,0 +1,98 @@
+---
+title: "Recurring markets"
+description: "Use recurring market selectors for auto-rolling market families."
+---
+
+A recurring market is an auto-rolling family of markets. Use it when you want a strategy to follow the current live market in a repeated series, such as an hourly or daily market.
+
+{/* Image placeholder: Node palette filtered to recurring markets, with 5m, 15m, 1h, 4h, and daily options visible. */}
+
+## When to use recurring markets
+
+Use recurring markets when the market identity changes over time, but the strategy logic should stay the same.
+
+Examples:
+
+- A daily crypto price market.
+- An hourly event market.
+- A repeated topic market where each period creates a new market.
+
+## Selector fields
+
+Recurring market selectors appear in `watch_selector` for conditions and `market_selector` for actions.
+
+| Field | Meaning |
+| --- | --- |
+| `recurring_tag_id` | Numeric tag that identifies the recurring cadence. |
+| `recurring_label` | Human-readable cadence such as `5m`, `15m`, `1h`, `4h`, or `daily`. |
+| `recurring_family_key` | Stable key for the market family. |
+| `topic_key` | Optional normalized topic, such as `btc` or `eth`. |
+| `fallback_market_id` | Market to use when a live replacement cannot be resolved. |
+| `auto_roll` | Set to `true` to request auto-roll behavior. |
+
+## Common labels
+
+| Label | Meaning |
+| --- | --- |
+| `5m` | Five-minute recurring market. |
+| `15m` | Fifteen-minute recurring market. |
+| `1h` | Hourly recurring market. |
+| `4h` | Four-hour recurring market. |
+| `daily` | Daily recurring market. |
+
+## Condition selector example
+
+```json
+{
+  "watch": {
+    "venue": "POLYMARKET",
+    "market_id": "btc-hourly-reference-market",
+    "outcome_token": "YES",
+    "watch_selector": {
+      "recurring_tag_id": 102175,
+      "recurring_label": "1h",
+      "recurring_family_key": "series:btc-hourly",
+      "topic_key": "btc",
+      "fallback_market_id": "btc-hourly-reference-market",
+      "auto_roll": true
+    }
+  },
+  "signal": "IMPLIED_PROBABILITY",
+  "trigger": "CROSS_ABOVE",
+  "threshold": 0.55
+}
+```
+
+## Action selector example
+
+```json
+{
+  "action_type": "BUY_MARKET_OUTCOME",
+  "allocation_pct": 100,
+  "target": {
+    "venue": "POLYMARKET",
+    "market": {
+      "market_id": "btc-hourly-reference-market",
+      "outcome_token": "YES",
+      "token_id": "1234567890",
+      "market_selector": {
+        "recurring_tag_id": 102175,
+        "recurring_label": "1h",
+        "recurring_family_key": "series:btc-hourly",
+        "topic_key": "btc",
+        "fallback_market_id": "btc-hourly-reference-market",
+        "auto_roll": true
+      }
+    }
+  }
+}
+```
+
+## Agent guidance
+
+When generating recurring market strategy JSON:
+
+- Keep `market_id` as a fallback identifier.
+- Set `auto_roll` to `true` only when the strategy should follow the live member of the family.
+- Keep `topic_key` short and normalized, such as `btc`, `eth`, or `sol`.
+- Use the same selector on related condition and action targets when both should roll together.

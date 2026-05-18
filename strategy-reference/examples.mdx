@@ -1,0 +1,224 @@
+---
+title: "Strategy examples"
+description: "Use complete strategy JSON examples as references for humans and AI agents."
+---
+
+These examples are complete strategy JSON objects.
+
+Replace placeholder market IDs and token IDs with real values before using them.
+
+## Single condition, single action
+
+This strategy buys `YES` when the implied probability crosses above `0.6`.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "buy_yes_above_60",
+  "initial_principal_usd": 100,
+  "root_node_id": "condition_entry",
+  "nodes": [
+    {
+      "node_id": "condition_entry",
+      "type": "CONDITION",
+      "level": 0,
+      "condition": {
+        "watch": {
+          "venue": "POLYMARKET",
+          "market_id": "btc-above-100k-may-2026",
+          "outcome_token": "YES",
+          "token_id": "1234567890"
+        },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.6
+      }
+    },
+    {
+      "node_id": "buy_yes",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": {
+            "market_id": "btc-above-100k-may-2026",
+            "outcome_token": "YES",
+            "token_id": "1234567890",
+            "current_price": 0.6
+          }
+        }
+      }
+    }
+  ],
+  "edges": [],
+  "decision_groups": [
+    {
+      "group_id": "entry_group",
+      "condition_node_id": "condition_entry",
+      "action_node_ids": ["buy_yes"],
+      "level": 0,
+      "mode": "SINGLE"
+    }
+  ]
+}
+```
+
+## Split allocation
+
+This strategy splits capital between buying `YES` and holding capital when the condition passes.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "split_buy_and_hold",
+  "initial_principal_usd": 100,
+  "root_node_id": "condition_entry",
+  "nodes": [
+    {
+      "node_id": "condition_entry",
+      "type": "CONDITION",
+      "level": 0,
+      "condition": {
+        "watch": {
+          "venue": "POLYMARKET",
+          "market_id": "btc-above-100k-may-2026",
+          "outcome_token": "YES",
+          "token_id": "1234567890"
+        },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.55
+      }
+    },
+    {
+      "node_id": "buy_yes",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 70,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": {
+            "market_id": "btc-above-100k-may-2026",
+            "outcome_token": "YES",
+            "token_id": "1234567890",
+            "current_price": 0.55
+          }
+        }
+      }
+    },
+    {
+      "node_id": "hold_cash",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "MOVE_TO_WALLET",
+        "allocation_pct": 30,
+        "target": {
+          "wallet": {
+            "wallet_id": "primary-wallet",
+            "wallet_name": "Primary wallet"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [],
+  "decision_groups": [
+    {
+      "group_id": "entry_group",
+      "condition_node_id": "condition_entry",
+      "action_node_ids": ["buy_yes", "hold_cash"],
+      "level": 0,
+      "mode": "SPLIT_100"
+    }
+  ]
+}
+```
+
+## Action followed by exit condition
+
+This strategy buys first, then exits to a wallet if ROI crosses above `25`.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "buy_then_exit_on_roi",
+  "initial_principal_usd": 100,
+  "root_node_id": "buy_yes",
+  "nodes": [
+    {
+      "node_id": "buy_yes",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": {
+            "market_id": "btc-above-100k-may-2026",
+            "outcome_token": "YES",
+            "token_id": "1234567890",
+            "current_price": 0.5
+          }
+        }
+      }
+    },
+    {
+      "node_id": "condition_take_profit",
+      "type": "CONDITION",
+      "level": 1,
+      "condition": {
+        "watch": {
+          "venue": "POLYMARKET",
+          "market_id": "btc-above-100k-may-2026",
+          "outcome_token": "YES",
+          "token_id": "1234567890"
+        },
+        "signal": "ROI_PCT",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 25,
+        "reference": {
+          "mode": "SINCE_GROUP_START"
+        }
+      }
+    },
+    {
+      "node_id": "exit_to_wallet",
+      "type": "ACTION",
+      "level": 1,
+      "action": {
+        "action_type": "MOVE_TO_WALLET",
+        "allocation_pct": 100,
+        "target": {
+          "wallet": {
+            "wallet_id": "primary-wallet",
+            "wallet_name": "Primary wallet"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "edge_1",
+      "from_node_id": "buy_yes",
+      "to_node_id": "condition_take_profit"
+    }
+  ],
+  "decision_groups": [
+    {
+      "group_id": "exit_group",
+      "condition_node_id": "condition_take_profit",
+      "action_node_ids": ["exit_to_wallet"],
+      "level": 1,
+      "mode": "SINGLE"
+    }
+  ]
+}
+```

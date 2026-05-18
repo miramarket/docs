@@ -1,133 +1,36 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
-icon: 'star'
+title: "Miramarket docs"
+description: "Build, validate, and share automated prediction market strategies."
 ---
 
-## Setting up
+Miramarket helps you build automated strategies for prediction markets. A strategy combines conditions, actions, allocations, and market targets into portable strategy JSON.
 
-Get your documentation site up and running in minutes.
+These docs are written for humans and AI agents. You can read them as a product guide, or use the structured examples to generate valid strategy JSON.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+## What you can do
 
-## Make it yours
+- Build a strategy visually with the strategy builder.
+- Connect market conditions to trade and capital movement actions.
+- Split capital across multiple actions with explicit percentages.
+- Use recurring markets so a strategy can follow an auto-rolling market family.
+- Export strategy JSON for review, sharing, or future automation.
+- Validate strategy JSON before you run it.
 
-Design a docs site that looks great and empowers your users.
+## Core concepts
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+| Concept | Meaning |
+| --- | --- |
+| Strategy | A complete automation plan. |
+| Condition | Decision logic that watches a market, time, or performance signal. |
+| Action | A capital movement or trade execution step. |
+| Decision group | One condition and the actions it can select. |
+| Recurring market | An auto-rolling family of markets, such as a repeated hourly or daily market. |
+| Strategy JSON | The portable external representation of a strategy. |
 
-## Create beautiful pages
+## Start here
 
-Everything you need to create world-class documentation.
+Use the [quickstart](/quickstart) if you want to build your first strategy.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+Use the [strategy JSON reference](/strategy-reference/json-format) if you are generating strategies programmatically.
 
-## Make your content agent ready
-
-Make your docs work for humans and AI agents alike.
-
-<Columns cols={2}>
-  <Card
-    title="Prompt component"
-    icon="robot"
-    href="/agent-ready/prompt"
-  >
-    Embed shareable AI prompts readers can copy or open in Cursor.
-  </Card>
-  <Card
-    title="Visibility"
-    icon="eye"
-    href="/agent-ready/visibility"
-  >
-    Show different content to humans and agents reading your docs.
-  </Card>
-  <Card
-    title="Contextual menu"
-    icon="bolt"
-    href="/agent-ready/contextual"
-  >
-    Give readers one-click access to Claude, ChatGPT, Cursor, and more.
-  </Card>
-  <Card
-    title="AI coding tools"
-    icon="wand-magic-sparkles"
-    href="/ai-tools/claude-code"
-  >
-    Set up Claude Code, Cursor, or Windsurf with Mintlify's skill.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Use the [validation guide](/strategy-builder/validation) if you need to explain or fix validation errors.

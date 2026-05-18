@@ -1,0 +1,135 @@
+---
+title: "Conditions"
+description: "Use conditions to express decision logic in a Miramarket strategy."
+---
+
+A condition watches a signal and decides which action or actions can run.
+
+In strategy JSON, a condition node has `type: "CONDITION"` and a `condition` object.
+
+## Condition fields
+
+| Field | Meaning |
+| --- | --- |
+| `watch` | The market or market selector to observe. |
+| `signal` | The value to evaluate. |
+| `trigger` | The crossing direction. |
+| `threshold` | The numeric trigger value. |
+| `timing` | Optional timing data for time conditions. |
+| `reference` | Optional reference mode for return or PnL conditions. |
+| `stabilizers` | Optional debounce-style controls. |
+| `conjuncts` | Optional additional `AND` clauses. |
+
+## Signals
+
+| `signal` | Use when |
+| --- | --- |
+| `IMPLIED_PROBABILITY` | You want to react to market price or probability. |
+| `ROI_PCT` | You want to react to return on investment. |
+| `PNL_USD` | You want to react to profit or loss in dollars. |
+| `TIME_SINCE_GROUP_SECONDS` | You want to trigger after time has passed in a decision group. |
+| `TIME_TO_RESOLUTION_SECONDS` | You want to trigger based on time remaining before resolution. |
+
+## Triggers
+
+Use `CROSS_ABOVE` when the signal must move above `threshold`.
+
+Use `CROSS_BELOW` when the signal must move below `threshold`.
+
+## Market watch
+
+`watch` identifies the market and outcome the condition observes.
+
+```json
+{
+  "venue": "POLYMARKET",
+  "market_id": "btc-above-100k-may-2026",
+  "outcome_token": "YES",
+  "token_id": "1234567890"
+}
+```
+
+For recurring markets, add `watch_selector`.
+
+```json
+{
+  "venue": "POLYMARKET",
+  "market_id": "btc-hourly-reference-market",
+  "outcome_token": "YES",
+  "watch_selector": {
+    "recurring_tag_id": 102175,
+    "recurring_label": "1h",
+    "recurring_family_key": "series:btc-hourly",
+    "topic_key": "btc",
+    "fallback_market_id": "btc-hourly-reference-market",
+    "auto_roll": true
+  }
+}
+```
+
+## Time conditions
+
+Time conditions require a `timing` object.
+
+For a trigger before close:
+
+```json
+{
+  "signal": "TIME_SINCE_GROUP_SECONDS",
+  "trigger": "CROSS_ABOVE",
+  "threshold": 0,
+  "timing": {
+    "mode": "BEFORE_CLOSE",
+    "seconds_before_close": 300
+  }
+}
+```
+
+For an absolute trigger time:
+
+```json
+{
+  "signal": "TIME_SINCE_GROUP_SECONDS",
+  "trigger": "CROSS_ABOVE",
+  "threshold": 0,
+  "timing": {
+    "mode": "ABSOLUTE_TIME",
+    "absolute_trigger_time_iso": "2026-05-18T18:00:00Z"
+  }
+}
+```
+
+## AND clauses
+
+Use `conjuncts` when a condition needs more than one clause.
+
+All clauses must pass for the condition to pass.
+
+```json
+{
+  "condition": {
+    "watch": {
+      "venue": "POLYMARKET",
+      "market_id": "btc-above-100k-may-2026",
+      "outcome_token": "YES",
+      "token_id": "1234567890"
+    },
+    "signal": "IMPLIED_PROBABILITY",
+    "trigger": "CROSS_ABOVE",
+    "threshold": 0.6,
+    "conjuncts": [
+      {
+        "watch": {
+          "venue": "POLYMARKET",
+          "market_id": "eth-above-5k-may-2026",
+          "outcome_token": "YES",
+          "token_id": "9876543210"
+        },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_BELOW",
+        "threshold": 0.4
+      }
+    ]
+  }
+}
+```

@@ -1,0 +1,86 @@
+---
+title: "Build a strategy"
+description: "Use the Miramarket strategy builder to create a valid strategy."
+---
+
+This workflow applies to humans using the canvas and AI agents reasoning about the same structure.
+
+## Choose a starting point
+
+Start with either a condition or an action.
+
+Choose a condition when the strategy should wait before committing capital.
+
+Choose an action when the strategy should allocate capital immediately.
+
+## Add actions
+
+Actions represent what the strategy can do with capital.
+
+Common actions include:
+
+- Buy a market outcome.
+- Sell a market outcome.
+- Hold a market position.
+- Move capital to a wallet.
+- Move capital to a vault.
+
+Each market action should include a market, outcome, and token ID in the exported strategy JSON.
+
+## Add conditions
+
+Conditions watch signals and decide when actions become eligible.
+
+Use conditions for:
+
+- Price thresholds.
+- Time-based triggers.
+- Return or PnL thresholds.
+- Resolution timing.
+- Multi-clause `AND` logic.
+
+## Create a decision group
+
+Place one condition and its eligible actions in the same decision group.
+
+For one selected action, use `SINGLE`.
+
+For multiple selected actions, use `SPLIT_100` and set every action's `allocation_pct`.
+
+Example split:
+
+| Action | `allocation_pct` |
+| --- | ---: |
+| Buy `YES` | `60` |
+| Hold | `40` |
+
+The total must equal `100`.
+
+## Continue after an action
+
+Add a child condition after an action when the strategy should continue after that action runs.
+
+In strategy JSON, this continuation is an edge from the action to the next condition.
+
+Do not connect a condition directly to another condition. Do not connect an action directly to another action.
+
+## Set risk guards
+
+Market actions can include optional risk guards.
+
+| Field | Meaning |
+| --- | --- |
+| `min_edge_bps` | Minimum expected edge in basis points. |
+| `max_spread_bps` | Maximum acceptable spread in basis points. |
+| `max_slippage_bps` | Maximum acceptable slippage in basis points. |
+| `max_data_staleness_sec` | Maximum age of market data in seconds. |
+
+Risk guards help prevent execution when market conditions no longer match the strategy design.
+
+## Validate before export
+
+Validation catches structural errors before you rely on a strategy.
+
+Fix every validation error before treating strategy JSON as ready.
+
+See [validation](/strategy-builder/validation) for the full public rule set.

@@ -1,81 +1,62 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
-icon: 'rocket'
+description: "Create your first Miramarket strategy."
 ---
 
-## Get started in three steps
+This guide shows the shortest path from a blank canvas to a valid strategy.
 
-Get your documentation site running locally and make your first customization.
+## 1. Open the strategy builder
 
-### Step 1: Set up your local environment
+Open the Miramarket strategy builder in your browser.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+{/* Image placeholder: Screenshot of the empty strategy builder canvas with the node palette open on the left. */}
 
-### Step 2: Deploy your changes
+## 2. Add a market action
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+Choose a market from the palette and add it to the canvas. A market action tells Miramarket where capital can move.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+For a basic strategy, choose a binary market and select the outcome you want to buy, such as `YES` or `NO`.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## 3. Add a condition
 
-### Step 3: Go live
+Add a condition when you want the strategy to wait for a rule before choosing an action.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+Common first conditions include:
 
-## Next steps
+- Price crosses above a threshold.
+- Price crosses below a threshold.
+- A time condition triggers before close.
+- A performance condition reaches a target.
 
-Now that you have your docs running, explore these key features:
+## 4. Connect the condition to actions
 
-<CardGroup cols={2}>
+A condition and its selectable actions form a decision group. The condition decides which action runs.
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+Use a single action for winner-takes-all logic. Use multiple actions when you want a `SPLIT_100` allocation.
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+{/* Image placeholder: Screenshot of one condition connected to two actions with visible allocation percentages. */}
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+## 5. Set initial principal
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+Set `initial_principal_usd` to the amount of capital the strategy can allocate.
 
-</CardGroup>
+Miramarket validates that the amount is positive. For live market actions, validation also checks whether the strategy has enough principal to satisfy minimum order constraints after splits and estimated fees.
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## 6. Validate the strategy
+
+Use the validation result in the builder before you run or export the strategy.
+
+A valid strategy has:
+
+- One root node.
+- Valid condition and action node types.
+- Decision groups for every condition.
+- Valid `SPLIT_100` allocations.
+- No graph cycles.
+- Market token IDs for market actions.
+
+## 7. Export strategy JSON
+
+Export the strategy when you want a portable representation.
+
+See [strategy JSON format](/strategy-reference/json-format) for the canonical fields and [examples](/strategy-reference/examples) for complete objects.

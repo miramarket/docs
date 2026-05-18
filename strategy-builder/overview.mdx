@@ -1,0 +1,72 @@
+---
+title: "Strategy builder overview"
+description: "Understand the visual model behind Miramarket strategies."
+---
+
+The strategy builder is a visual canvas for creating automated prediction market strategies. You arrange conditions and actions into a graph, then Miramarket converts that graph into strategy JSON.
+
+{/* Image placeholder: Full strategy builder screen showing the left node palette, central canvas, and selected node details. */}
+
+## Strategy graph
+
+A strategy graph has two node types:
+
+| Node type | Purpose |
+| --- | --- |
+| `CONDITION` | Watches a signal and decides which action or actions can run. |
+| `ACTION` | Moves capital, places a trade, holds a position, or exits to a wallet or vault. |
+
+Conditions decide. Actions move capital.
+
+## Root node
+
+Every strategy has exactly one root node. The root may be a condition or an action.
+
+If the root is a condition, the strategy waits for that condition and then selects actions in its decision group.
+
+If the root is an action, the strategy immediately allocates capital to that action. The action may then lead to child conditions.
+
+## Levels
+
+Levels describe graph depth.
+
+- The root node is at `level: 0`.
+- A condition and the actions it selects stay on the same level.
+- Level only increases when an action leads to a child condition.
+
+This keeps decision groups readable and makes the strategy JSON deterministic.
+
+## Decision groups
+
+A decision group contains one condition and one or more actions at the same level.
+
+Use a decision group when a condition should select capital movement.
+
+| Mode | Meaning |
+| --- | --- |
+| `SINGLE` | The condition selects one action. |
+| `SPLIT_100` | The condition selects multiple actions, and their `allocation_pct` values must sum to `100`. |
+
+{/* Image placeholder: Close-up of a decision group with one condition and two same-level actions connected by a left rail. */}
+
+## Canvas workflow
+
+You typically build in this order:
+
+1. Add a market, wallet, vault, or hold action.
+2. Add a condition when you need decision logic.
+3. Connect the condition to one or more actions.
+4. Set allocations for split groups.
+5. Add child conditions after actions when the strategy should continue.
+6. Validate the strategy.
+7. Export strategy JSON.
+
+## Agent guidance
+
+When generating strategy JSON, preserve these rules:
+
+- Use `CONDITION` only for decision logic.
+- Use `ACTION` only for capital movement or trade execution.
+- Put every condition in exactly one decision group.
+- Use edges only for action-to-condition continuation.
+- Encode condition-to-action selection through `decision_groups`, not `edges`.
