@@ -80,8 +80,8 @@
     }
   },
   "logo": {
-    "light": "/logo/miramarket-docs-light.svg",
-    "dark": "/logo/miramarket-docs-dark.svg"
+    "light": "/logo/miramarket-icon.png",
+    "dark": "/logo/miramarket-icon.png"
   },
   "navbar": {
     "links": [],
