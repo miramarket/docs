@@ -7,31 +7,29 @@ Use this glossary when a word in the builder is unfamiliar.
 
 | Term | Meaning |
 | --- | --- |
+| Action | A node that tells the strategy what to do after a condition continues. |
+| Allocation | The percentage of the available amount assigned to an action. Actions in one split must total `100%`. |
+| Canvas | The workspace where strategy nodes and their order appear. |
+| Close time | The time when a market stops accepting activity. It can differ from the time the market resolves. |
+| Condition | A node that checks a price, time, or resolution rule before the strategy continues. |
+| Connect | The top-bar button used to sign in with a wallet. It is different from a Wallet action. |
+| Hold | A Utility action that keeps the current position open and can continue to a child condition. |
+| Market | A prediction market question or a named outcome within a market card. |
+| Market action | An action that buys the selected `YES` or `NO` side of a market outcome. |
 | Miramarket | The product for building and running prediction market strategies. |
-| Strategy | A plan that says what market to watch, what rule to use, and what action to take. |
-| Strategy builder | The app workspace at `app.miramarket.org`. |
-| Canvas | The main area where your strategy appears. |
-| Left panel | The area where you choose markets, conditions, wallet actions, and utility actions. |
-| Market | A prediction market, usually asking whether something will happen. |
-| Outcome | A possible side of a market, often `YES` or `NO`. |
-| `YES` | The side that pays if the market outcome is yes. |
-| `NO` | The side that pays if the market outcome is no. |
-| Price | The market's current cost for an outcome. It often reads like probability, such as 60 cents. |
-| Condition | A rule the strategy checks before acting. |
-| Price condition | A rule based on market price. |
-| Time condition | A rule based on time, such as before market close. |
-| Resolution condition | A rule based on whether a market resolves `YES` or `NO`. |
-| Action | What the strategy does if the rule is met. |
-| Allocation | The share of funds sent to an action. |
-| Wallet | Your connected wallet or a wallet destination. |
-| Utility | Non-market actions such as holding or moving funds. |
-| Recurring market | A market family that repeats, such as 5-minute or daily markets. |
-| Trending | A market filter that shows active or popular markets. |
-| Category filter | A topic filter such as **Sports**, **Crypto**, or **Politics**. |
-| Search | The box used to find markets by name. |
+| Named outcome | A specific option inside a multi-outcome market card, such as a team or person. |
+| New Strategy | The top-bar button that starts a fresh strategy draft. |
+| Outcome | A possible result or named option in a market. |
+| Price | The displayed current cost for a selected side, often shown in cents. |
+| Price Condition | A condition that checks a selected market side against a price threshold. |
+| Recurring market | A market family that repeats on a schedule, such as `5m` or daily. |
+| Resolution | A condition that branches according to a selected market outcome. |
 | Run Demo | A simulated run that does not place real trades. |
-| Run Live | A real run that can use real funds. |
-| Connect | The button for signing in with a wallet. |
-| New Strategy | The button that starts a fresh canvas. |
-| Regional availability | Some markets or venues may be unavailable depending on location. |
-| Prediction market risk | The risk that trades lose money, fail, slip, or behave differently than expected. |
+| Run Live | A run that can use real funds. |
+| Strategy | A complete plan made from markets, conditions, and actions. |
+| Strategy builder | The app workspace at `app.miramarket.org`. |
+| Time Condition | A condition that checks a time before market close or a specific time. |
+| Utility | The **Market** tab section that contains non-market actions such as **Hold**. |
+| Wallet action | An action that directs its allocation to a Wallet destination. |
+| `YES` | The side for a selected named outcome happening. |
+| `NO` | The side for a selected named outcome not happening. |

@@ -1,60 +1,74 @@
 ---
-title: "Quickstart"
-description: "Build and test your first Miramarket strategy."
+title: "Build your first strategy"
+description: "Create a simple strategy and test it with Run Demo."
 ---
 
-This guide shows the fastest way to build a simple strategy and test it with **Run Demo**.
+This guide helps you create one small strategy and test it with **Run Demo**. You do not need to use real funds.
 
-## 1. Open the strategy builder
+## What you will build
+
+You will create a strategy with one rule and one action:
+
+> When the price condition is met, buy the `YES` or `NO` side you selected.
+
+The exact market can change over time. Choose an active market you understand and read its resolution rules before adding it.
+
+## 1. Open the builder
 
 Go to [app.miramarket.org](https://app.miramarket.org).
 
 <img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas shown" />
 
-1. The top bar has **New Strategy**, **Run Demo**, **Run Live**, and **Connect**.
-2. The left panel lets you choose markets, conditions, wallet actions, and utility actions.
-3. The canvas is where your strategy appears.
+1. The top bar includes **New Strategy**, **Run Demo**, the run menu, and **Connect**.
+2. Use **Condition** and **Market** in the left panel to find nodes.
+3. The canvas is where the strategy appears.
 
-## 2. Choose a market
+## 2. Choose a market and side
 
 Open the **Market** tab. Use **Trending**, a category filter, or the search box to find a market.
 
 <img src="/images/tutorial/market-card-outcomes.png" alt="A market card with YES and NO outcome buttons shown" />
 
-Pick the outcome you want the strategy to buy. Most markets show `YES` and `NO` prices.
+Some cards contain several named outcomes. First select the named outcome you mean. Then select `YES` or `NO` for that outcome. Selecting a side prepares the card; click the card to add it to the canvas, or drag it to choose its position.
 
-## 3. Add a condition
+Check the market question, the named outcome, the selected side, and the displayed price before continuing.
+
+## 3. Add a price condition
 
 Open the **Condition** tab and choose **Price Condition**.
 
 <img src="/images/tutorial/condition-panel.png" alt="Condition tab with Price Condition, Time Condition, and Resolution shown" />
 
-A condition tells the strategy when to act. For your first strategy, use a price rule such as "if the price is above 50 cents."
+A condition tells the strategy when to act. Click the card to add it at the current position, or drag it onto the canvas to place it precisely.
+
+For a first strategy, use a simple threshold such as "price is greater than `50¢`." Configure the market, side, comparison, and threshold in the condition node. Make sure the condition watches the market and side you intend.
 
 ## 4. Add the market action
 
-Click a market card to add it to the strategy. The canvas shows the condition and the market action.
+Return to **Market**. Choose the market and side again, then click or drag its card onto the canvas. Place it after the condition.
 
-<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple strategy with a price condition and market action shown" />
+<img src="/images/tutorial/simple-strategy-canvas.png" alt="Price condition and market action on the Miramarket canvas shown" />
 
-The condition is the rule. The action is what happens if the rule is met.
+The action is what the strategy does when its condition is met. A single action uses a `100%` allocation by default. If you add multiple actions to the same decision, review their allocations so they total `100%`.
 
-## 5. Run a demo
+## 5. Read the canvas before you run
+
+Check each node in order:
+
+1. The condition names the price, time, or result that the strategy checks.
+2. The action names the market outcome, **Hold**, or **Wallet** destination that follows.
+3. The allocation shows how the available amount is divided between actions.
+
+If the strategy is not what you meant, edit the node or use **New Strategy** to start a fresh draft.
+
+## 6. Run a demo
 
 Click **Run Demo**.
 
 <img src="/images/tutorial/top-bar-run-demo-connect.png" alt="Top bar with Run Demo and Connect shown" />
 
-A demo run does not place real trades. Use it to check whether the strategy behaves the way you expect.
+A demo run does not place real trades. It validates the strategy and starts a simulated run. Review the market, side, condition, and allocation first. A simulation follows the settings you gave it; it cannot tell you whether those settings match your intent.
 
-## 6. Go live only when ready
+## What next
 
-Use **Connect** to sign in with a wallet. Then use the run menu to choose **Run Live**.
-
-<img src="/images/tutorial/run-options.png" alt="Run menu with Run Demo and Run Live shown" />
-
-Live runs can use real funds. Review the market, outcome, amount, and condition before running live.
-
-## Next steps
-
-Read the [full tutorial](/strategy-builder/tutorial) for a slower walkthrough, or use the [glossary](/strategy-builder/glossary) if a term is unfamiliar.
+Read [Strategy builder overview](/strategy-builder/overview) to understand the canvas, [Markets and outcomes](/strategy-builder/markets) to choose a side correctly, or [Run Demo and Run Live](/strategy-builder/run-demo-live) before connecting a wallet.

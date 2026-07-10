@@ -1,34 +1,34 @@
 ---
-title: "Run demo or live"
-description: "Understand the difference between simulated and live strategy runs."
+title: "Run Demo and Run Live"
+description: "Test a strategy safely, then understand what changes when a run can use real funds."
 ---
 
-Miramarket gives you two ways to run a strategy: **Run Demo** and **Run Live**.
+Miramarket gives you two ways to run a strategy. **Run Demo** simulates the strategy. **Run Live** can use real funds when its conditions trigger.
 
 <img src="/images/tutorial/run-options.png" alt="Run menu with Run Demo and Run Live shown" />
 
 ## Run Demo
 
-Use **Run Demo** to test a strategy without placing real trades.
+Use **Run Demo** before you use **Run Live**. It validates the strategy, saves a demo version, and starts a simulated run without placing real trades.
 
-Demo mode is useful for checking:
+Before you start, review:
 
-- Whether your condition is set correctly.
-- Whether the action is attached to the right market.
-- Whether the selected outcome is `YES` or `NO`.
-- Whether the allocation looks right.
+- The market and named outcome.
+- The selected `YES` or `NO` side.
+- Each condition and its threshold or timing.
+- Each action and its allocation.
 
-Run demo first, even for simple strategies.
+Demo follows the settings you supplied. It can reveal an incomplete or invalid strategy, but it cannot decide whether those settings match your trading idea.
 
 ## Run Live
 
-Use **Run Live** only when you are ready to use real funds.
+Use **Run Live** only when you are ready to use real funds. The run menu keeps **Run Live** unavailable until you connect a wallet.
 
-Live mode may require you to connect a wallet and have funds available. Live trades can lose money.
+Before a live run starts, Miramarket asks you to confirm. Live trades do not necessarily happen immediately; they can execute when the strategy conditions trigger.
 
 ## Connect wallet
 
-Use **Connect** in the top bar when you are ready to sign in with a wallet.
+Use **Connect** in the top bar when you are ready to sign in with a wallet. Connecting a wallet does not start a live run.
 
 <img src="/images/tutorial/top-bar-run-demo-connect.png" alt="Top bar with Run Demo and Connect shown" />
 
@@ -37,11 +37,12 @@ Connecting a wallet does not mean you should run live immediately. Review the st
 ## Safe workflow
 
 1. Build the strategy.
-2. Run a demo.
-3. Fix anything that looks wrong.
-4. Review the market, outcome, condition, and allocation.
-5. Connect wallet.
-6. Use **Run Live** only if you accept the risk.
+2. Check every market, side, condition, and allocation.
+3. Run a demo.
+4. Review the result and revise the strategy if needed.
+5. Read the [live-run checklist](/strategy-builder/validation).
+6. Connect a wallet.
+7. Use **Run Live** only if you accept the risk.
 
 ## When not to run live
 
@@ -49,6 +50,10 @@ Do not run live if:
 
 - You do not understand the market.
 - You are unsure whether `YES` or `NO` is correct.
-- The price or close time looks wrong.
+- The price, close time, or active recurring window looks wrong.
 - You have not tested with **Run Demo**.
 - You are not comfortable losing funds.
+
+## While a run is active
+
+The builder locks the canvas while an active run is in progress. Review the run before you make changes to future steps or start another run.

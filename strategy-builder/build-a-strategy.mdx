@@ -1,44 +1,32 @@
 ---
 title: "Build a strategy"
-description: "Create a Miramarket strategy from a market, condition, and action."
+description: "Use the current first-strategy guide to build a strategy in Miramarket."
 ---
 
-A strategy says what should happen when a market reaches a rule you choose.
+The current step-by-step guide is [Build your first strategy](/quickstart).
 
-Example: "If this market trades above 60 cents, buy `YES`."
+## The building blocks
 
-## Step 1: Pick the outcome
+Every strategy combines:
 
-Open the **Market** tab. Choose a market, then choose whether the strategy should buy `YES` or `NO`.
+- A market and selected `YES` or `NO` side.
+- A condition that decides when the strategy continues.
+- One or more actions, including a market outcome, **Hold**, or **Wallet**.
+- An allocation for each action.
 
-## Step 2: Add a condition
+## Build in the right order
 
-Open the **Condition** tab and choose a rule.
+1. Choose a market and side in **Market**.
+2. Add a condition from **Condition**.
+3. Add the action that follows the condition.
+4. Review the canvas, including all allocations.
+5. Use **Run Demo** before **Run Live**.
 
-Use **Price Condition** when you care about the current market price.
+Click a palette card to add it near the selected node, or drag it to place it precisely on the canvas.
 
-Use **Time Condition** when you want something to happen before close or at a specific time.
+## Learn each part
 
-Use **Resolution** when the next step depends on whether a market resolves `YES` or `NO`.
-
-## Step 3: Add an action
-
-The action is what the strategy does after the rule is met. Common actions are buying an outcome, holding, or moving funds back to a wallet.
-
-## Step 4: Check the canvas
-
-<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple strategy with a price condition and market action shown" />
-
-Read the strategy from left to right or top to bottom:
-
-1. The condition checks the rule.
-2. The action runs if the rule is met.
-3. The allocation shows how much of the available amount goes to the action.
-
-## Step 5: Run a demo
-
-Click **Run Demo** before going live. Demo mode helps you check the strategy without placing real trades.
-
-## Step 6: Go live carefully
-
-Use **Run Live** only after you check the market, outcome, amount, and condition. Live runs can use real funds.
+- [Markets and outcomes](/strategy-builder/markets)
+- [Conditions](/strategy-builder/conditions)
+- [Actions](/strategy-builder/actions)
+- [Run Demo and Run Live](/strategy-builder/run-demo-live)

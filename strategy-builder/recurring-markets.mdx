@@ -1,38 +1,33 @@
 ---
 title: "Recurring markets"
-description: "Use market families that repeat over time."
+description: "Choose a repeated market family and verify its current window."
 ---
 
-Recurring markets are market families that repeat on a schedule. Examples include 5-minute, 15-minute, hourly, 4-hour, or daily markets.
+Recurring markets are market families that repeat on a schedule. The **Recurring** filter groups them by time family, including **5m**, **15m**, **1h**, **4h**, and **daily**.
 
 <img src="/images/tutorial/recurring-markets.png" alt="Recurring markets filter with time options and market cards shown" />
 
-## When to use recurring markets
+## Choose an active window
 
-Use recurring markets when your idea applies to a repeated event.
+1. Open **Market** in the left panel.
+2. Select **Recurring**.
+3. Select a time family.
+4. Read the market card and confirm that its time window is current.
+5. Choose the named outcome and its `YES` or `NO` side.
+6. Click or drag the card to add the recurring market action.
 
-Examples:
-
-- Short-window crypto up/down markets.
-- Daily market families.
-- Repeated event markets with similar wording.
-
-## How to find them
-
-1. Open **Market**.
-2. Choose **Recurring**.
-3. Pick a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**.
-4. Choose a market card and outcome.
+The builder refreshes a recurring action to match the current or next available market in its family. Do not assume it will continue forever. Review the active market and the strategy state before each live run.
 
 ## What to check
 
-Recurring markets can change quickly. Before running live, check:
+- The time family you selected.
+- The current market window and close time.
+- The named outcome and `YES` or `NO` side.
+- The condition and allocation that apply to the recurring action.
+- Whether the market is still active.
 
-- The current time window.
-- The market close time.
-- Whether you selected `YES` or `NO` correctly.
-- Whether the strategy should continue into the next repeated market.
+## Use a demo first
 
-## Start with demo
+Recurring markets can change quickly. Use **Run Demo** to make sure the canvas, selected market, and timing match your intent before you use **Run Live**.
 
-Use **Run Demo** before using real funds. Recurring markets can move fast, so a demo run is especially useful.
+For a first recurring strategy, use one market action and one condition. Add more nodes only after you understand how the current window is selected.

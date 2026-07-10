@@ -1,56 +1,60 @@
 ---
 title: "Conditions"
-description: "Use conditions to decide when a strategy should act."
+description: "Use price, time, and resolution rules to decide when a strategy continues."
 ---
 
-A condition is a rule. The strategy checks the rule before taking an action.
+A condition is a rule on the canvas. When the rule is met, the strategy can continue to the next action or condition.
 
 <img src="/images/tutorial/condition-panel.png" alt="Condition tab with Price Condition, Time Condition, and Resolution shown" />
 
-## Price condition
+## Add a condition
 
-Use **Price Condition** when the current market price matters.
+Open **Condition** in the left panel. Click a card to add it at the current position, or drag it to place it before, after, or below another node. Configure the node after you add it.
 
-Examples:
+## Price Condition
 
-- "If price is greater than 60 cents, buy `YES`."
-- "If price is less than 40 cents, move funds to wallet."
-
-Price conditions are useful when you want the market to reach a certain confidence level before acting.
-
-## Time condition
-
-Use **Time Condition** when the strategy should act before close or at a chosen time.
+Use **Price Condition** when a selected market side must reach a price before the strategy continues. Choose the market and side to watch, then set the comparison and threshold.
 
 Examples:
 
-- "If the market is close to ending, move funds to wallet."
-- "At a specific time, buy the selected outcome."
+- "If the selected `YES` side is greater than `60¢`, continue."
+- "If the selected `NO` side is less than `40¢`, continue."
 
-Time conditions are useful near resolution or for markets that change quickly.
+Check the side and comparison carefully. `>` and `<` produce opposite behavior. A displayed market price is not a guarantee that an action will execute at that exact price.
+
+## Time Condition
+
+Use **Time Condition** when the strategy should continue before a market closes or at a specific time. Choose the market first, then set the timing mode and value.
+
+Examples:
+
+- "Continue 10 minutes before the selected market closes."
+- "Continue at the chosen date and time."
+
+Before-close timing is not available for every market venue. If the builder does not offer the timing you need, choose a different condition or market.
 
 ## Resolution
 
-Use **Resolution** when the next step depends on how a market finishes.
+Use **Resolution** when the next step depends on a selected market outcome. The node branches according to the outcome that resolves.
 
 Examples:
 
-- "If the market resolves `YES`, move to another market."
-- "If the market resolves `NO`, stop and return to wallet."
+- "If the selected outcome resolves `YES`, continue to this branch."
+- "If it resolves `NO`, continue to the other branch."
 
-Resolution conditions are useful for follow-up strategies.
+Use this condition only when you understand how the market resolves and what each branch of the strategy will do.
 
 ## Choose the right condition
 
 Ask yourself:
 
-- Do I care about price? Use **Price Condition**.
-- Do I care about timing? Use **Time Condition**.
-- Do I care about the final result? Use **Resolution**.
+- Do you need a price threshold? Use **Price Condition**.
+- Do you need a time trigger? Use **Time Condition**.
+- Do you need to branch after an outcome resolves? Use **Resolution**.
 
 ## Common mistakes
 
-- Setting the price direction backwards.
-- Choosing the wrong `YES` or `NO` outcome.
-- Using a time rule without checking the market close time.
-- Running live before testing with **Run Demo**.
+- Watching the wrong market or side.
+- Reversing a price comparison.
+- Treating market close and market resolution as the same moment.
+- Using **Run Live** before testing with **Run Demo**.

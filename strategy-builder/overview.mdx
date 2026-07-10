@@ -1,9 +1,9 @@
 ---
-title: "Strategy builder basics"
-description: "Understand the main parts of the Miramarket builder."
+title: "Strategy builder overview"
+description: "Learn how the Miramarket workspace and strategy canvas fit together."
 ---
 
-The strategy builder is the workspace where you create a strategy visually. You use the left panel to choose building blocks, then place them on the canvas.
+The strategy builder is where you create a strategy visually. Choose nodes in the left panel, then click to add them or drag them onto the canvas.
 
 <img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas shown" />
 
@@ -11,24 +11,31 @@ The strategy builder is the workspace where you create a strategy visually. You 
 
 | Area | What it does |
 | --- | --- |
-| Top bar | Starts a new strategy, runs a demo, opens run options, and connects a wallet. |
-| Left panel | Shows markets, conditions, wallet actions, and utility actions. |
-| Canvas | Shows the strategy you are building. |
+| Top bar | Starts a new draft, runs a demo, opens run options, and connects a wallet. |
+| Left panel | Switch between **Condition** and **Market** to find nodes. |
+| Canvas | Shows the nodes and their order in the strategy. |
 
-## Basic flow
+## Nodes on the canvas
 
-1. Choose a market or condition from the left panel.
-2. Add it to the canvas.
-3. Set the rule or outcome.
-4. Run a demo.
-5. Review the result before using real funds.
+Every strategy starts with a node. A condition checks a rule. A market action buys a selected outcome. **Hold** keeps the current position open. **Wallet** directs funds to the selected wallet destination.
 
-## What to build first
+Click a palette card to add it relative to the node you selected. Dragging is useful when you want to place a node before, after, or below another node. The canvas arranges the resulting path for you; you do not need to draw connectors manually.
 
-Start with one condition and one action. For example: "If a market price is above 50 cents, buy `YES`."
+## A simple strategy
 
-That pattern is enough to learn how the builder works.
+Start with one condition and one market action. For example:
 
-## Learn more
+> If the selected outcome is above `50¢`, buy its `YES` side.
 
-Use the [tutorial](/strategy-builder/tutorial) for a full walkthrough, or use the [glossary](/strategy-builder/glossary) for definitions.
+One action receives a `100%` allocation by default. When a condition has more than one action, make sure the allocations add up to `100%`.
+
+## Build safely
+
+Use **Run Demo** before **Run Live**. A live run can use real funds. If the canvas has an active run, editing is locked until that run is no longer active.
+
+## Continue learning
+
+- [Build your first strategy](/quickstart)
+- [Markets and outcomes](/strategy-builder/markets)
+- [Conditions](/strategy-builder/conditions)
+- [Actions](/strategy-builder/actions)

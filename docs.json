@@ -11,34 +11,37 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Start here",
+        "tab": "Miramarket",
         "groups": [
           {
-            "group": "Learn Miramarket",
+            "group": "Get started",
             "pages": [
               "index",
               "quickstart",
-              "strategy-builder/tutorial",
-              "strategy-builder/examples",
-              "strategy-builder/glossary"
+              "strategy-builder/overview"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Strategy builder",
-        "groups": [
+          },
           {
-            "group": "Using the builder",
+            "group": "Build a strategy",
             "pages": [
-              "strategy-builder/overview",
-              "strategy-builder/build-a-strategy",
               "strategy-builder/markets",
               "strategy-builder/conditions",
               "strategy-builder/actions",
-              "strategy-builder/recurring-markets",
+              "strategy-builder/recurring-markets"
+            ]
+          },
+          {
+            "group": "Test and run",
+            "pages": [
               "strategy-builder/run-demo-live",
               "strategy-builder/validation"
+            ]
+          },
+          {
+            "group": "Examples and reference",
+            "pages": [
+              "strategy-builder/examples",
+              "strategy-builder/glossary"
             ]
           }
         ]
@@ -58,7 +61,7 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Quickstart",
+          "anchor": "Build your first strategy",
           "href": "/quickstart",
           "icon": "rocket"
         },
@@ -68,7 +71,7 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Run demo or live",
+          "anchor": "Run Demo and Run Live",
           "href": "/strategy-builder/run-demo-live",
           "icon": "play"
         }

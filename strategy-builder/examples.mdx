@@ -1,63 +1,67 @@
 ---
-title: "Simple examples"
-description: "Practical Miramarket strategy ideas for new users."
+title: "Strategy examples"
+description: "Use verified strategy patterns as a starting point for your own demo."
 ---
 
-These examples are starting points. Always run a demo before using real funds.
+These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Run Demo**.
 
-## Buy if price rises
+## Wait for a price threshold
 
-Use this when you want confirmation before entering a market.
-
-1. Add a **Price Condition**.
-2. Set the condition to "price is greater than 60 cents."
-3. Add a market action that buys `YES`.
-4. Run a demo.
-
-Plain meaning: if the market becomes more confident, the strategy enters.
-
-## Exit if price falls
-
-Use this when you want to protect funds if a market moves against your idea.
+Use this when you want a selected side to reach a specific displayed price before you buy.
 
 1. Add a **Price Condition**.
-2. Set the condition to "price is less than 40 cents."
-3. Add a wallet action.
-4. Run a demo.
+2. Set the watched market, side, comparison, and threshold, such as greater than `60¢`.
+3. Add a market action for the side you want to buy.
+4. Confirm the action has a `100%` allocation.
+5. Run a demo.
 
-Plain meaning: if confidence drops, the strategy moves funds away from the market path.
+Plain meaning: when the selected side reaches your threshold, the strategy tries to buy that side.
 
-## Act before close
+## Continue after a market action
+
+Use this when one market action should lead to another rule.
+
+1. Add a market action.
+2. Add a condition below that action.
+3. Configure the condition for the next price, time, or resolution check.
+4. Add the next action after the condition.
+5. Run a demo.
+
+Plain meaning: the strategy takes one step, then waits for another rule before continuing.
+
+## Act at a time
 
 Use this when the timing of a market matters.
 
 1. Add a **Time Condition**.
-2. Set it to trigger before the market closes.
-3. Add the action you want to take.
-4. Run a demo.
-
-Plain meaning: the strategy waits until the chosen time window before acting.
-
-## Split between a market and wallet
-
-Use this when you do not want all available funds in one place.
-
-1. Add a condition.
-2. Add a market action.
-3. Add a wallet action.
-4. Set the allocations, such as 70% to the market and 30% to wallet.
+2. Choose before-close timing or a specific time.
+3. Add the market action that should follow.
+4. Check the market close time and the trigger value.
 5. Run a demo.
 
-Plain meaning: if the rule is met, the strategy divides funds between two choices.
+Plain meaning: the strategy waits until the configured time rule is met before continuing.
+
+## Split a decision between actions
+
+Use this when one condition should direct the available amount to more than one action.
+
+1. Add a condition.
+2. Add two actions after that condition.
+3. Set allocations, such as 70% to a market action and 30% to **Wallet**.
+4. Confirm the total is `100%`.
+5. Run a demo.
+
+Plain meaning: when the condition is met, the strategy divides the available amount between the actions you configured.
 
 ## Use a recurring market
 
-Use this for repeated markets, such as short time-window crypto markets.
+Use this for a repeated market family, such as a short time-window market.
 
 1. Open **Market**.
 2. Choose **Recurring**.
 3. Pick a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**.
-4. Add your condition and action.
-5. Run a demo.
+4. Choose the active market window and side.
+5. Add a condition if the market action should wait for a rule.
+6. Run a demo.
 
-Plain meaning: the strategy follows a market family that repeats over time.
+Plain meaning: the strategy uses the recurring market family and refreshes its selected market as the family changes.

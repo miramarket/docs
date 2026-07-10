@@ -1,43 +1,65 @@
 ---
 title: "Actions"
-description: "Use actions to decide what the strategy does."
+description: "Choose what a strategy does after a condition continues."
 ---
 
-An action is what the strategy does after a condition is met.
+An action is a node from the **Market** tab. It tells the strategy what to do after a condition continues.
 
-<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple strategy with a price condition and market action shown" />
+Use the **Market** tab for ordinary markets, recurring markets, **Wallet**, and **Utility**. Click a card to add it, or drag it onto the canvas to choose its position.
 
 ## Buy a market outcome
 
-The most common action is buying a `YES` or `NO` outcome.
+Market cards create a **buy market outcome** action. Select a named outcome when the card has more than one, then choose `YES` or `NO`. Click or drag the card to add that choice to the canvas.
 
-Before using this action, check:
+Review the action node before you run:
 
-- The market question.
-- The chosen `YES` or `NO` side.
-- The current price.
-- The amount or allocation.
+- The market question and named outcome.
+- The selected `YES` or `NO` side.
+- The displayed price.
+- The allocation.
+
+## Use a recurring market outcome
+
+**Recurring** is a market filter, not a separate action type. It creates the same market-outcome action, but tracks a recurring market family. Choose a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**, then choose the current market and side.
+
+Verify the active window before you run. See [Recurring markets](/strategy-builder/recurring-markets) for details.
+
+## Wallet
+
+Choose **Wallet** in the **Market** tab to add a Wallet action. A Wallet action directs its allocated funds to the selected wallet destination.
+
+<img src="/images/tutorial/wallet-action.png" alt="Wallet action card in the Market tab shown" />
+
+**Connect** and a Wallet action are different:
+
+- **Connect** signs you in with a wallet so that **Run Live** can become available.
+- A Wallet action is a node in the strategy itself.
 
 ## Hold
 
-Use hold when you want the strategy to keep the current position instead of moving funds.
+Choose **Utility** in the **Market** tab to add **Hold**. Hold keeps the current position open and lets the strategy continue to child conditions.
 
-## Move to wallet
+<img src="/images/tutorial/utility-hold.png" alt="Hold card in the Utility section shown" />
 
-Use a wallet action when the strategy should move funds away from the current market path.
-
-This can be useful for exits, stop-loss style strategies, or after a market resolves.
+Use Hold only when you understand the position that the strategy will keep. A Hold node may follow a market action and continue the strategy to another condition.
 
 ## Allocation
 
-Allocation is the percentage of available funds sent to an action.
+Allocation is the percentage of the available amount assigned to an action. A single action receives `100%` by default.
 
-Example: if the strategy has $100 available and an action has 70% allocation, that action uses $70.
+If a condition has multiple actions, their allocations must total `100%`. The builder balances new actions evenly unless you set an allocation explicitly.
 
-If you split between two actions, make sure the split matches your intent.
+Example: a 70% market action and a 30% Wallet action split the available amount between those two actions.
+
+## Build a valid flow
+
+- Start with one root condition or one root market action.
+- Place market actions after the condition they depend on.
+- Add a condition below a market action when the strategy should continue after that action.
+- Use the canvas placement guides when dragging to avoid adding a node in the wrong place.
 
 ## Demo vs live
 
-Actions in **Run Demo** are simulated.
+Actions in **Run Demo** are simulated. **Run Live** can use real funds when conditions trigger.
 
-Actions in **Run Live** can use real funds. Always demo first.
+Always review the action, side, and allocation in a demo before using **Run Live**.
