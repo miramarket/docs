@@ -1,0 +1,63 @@
+---
+title: "Simple examples"
+description: "Practical Miramarket strategy ideas for new users."
+---
+
+These examples are starting points. Always run a demo before using real funds.
+
+## Buy if price rises
+
+Use this when you want confirmation before entering a market.
+
+1. Add a **Price Condition**.
+2. Set the condition to "price is greater than 60 cents."
+3. Add a market action that buys `YES`.
+4. Run a demo.
+
+Plain meaning: if the market becomes more confident, the strategy enters.
+
+## Exit if price falls
+
+Use this when you want to protect funds if a market moves against your idea.
+
+1. Add a **Price Condition**.
+2. Set the condition to "price is less than 40 cents."
+3. Add a wallet action.
+4. Run a demo.
+
+Plain meaning: if confidence drops, the strategy moves funds away from the market path.
+
+## Act before close
+
+Use this when the timing of a market matters.
+
+1. Add a **Time Condition**.
+2. Set it to trigger before the market closes.
+3. Add the action you want to take.
+4. Run a demo.
+
+Plain meaning: the strategy waits until the chosen time window before acting.
+
+## Split between a market and wallet
+
+Use this when you do not want all available funds in one place.
+
+1. Add a condition.
+2. Add a market action.
+3. Add a wallet action.
+4. Set the allocations, such as 70% to the market and 30% to wallet.
+5. Run a demo.
+
+Plain meaning: if the rule is met, the strategy divides funds between two choices.
+
+## Use a recurring market
+
+Use this for repeated markets, such as short time-window crypto markets.
+
+1. Open **Market**.
+2. Choose **Recurring**.
+3. Pick a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**.
+4. Add your condition and action.
+5. Run a demo.
+
+Plain meaning: the strategy follows a market family that repeats over time.

@@ -1,62 +1,60 @@
 ---
 title: "Quickstart"
-description: "Create your first Miramarket strategy."
+description: "Build and test your first Miramarket strategy."
 ---
 
-This guide shows the shortest path from a blank canvas to a valid strategy.
+This guide shows the fastest way to build a simple strategy and test it with **Run Demo**.
 
 ## 1. Open the strategy builder
 
-Open the Miramarket strategy builder in your browser.
+Go to [app.miramarket.org](https://app.miramarket.org).
 
-{/* Image placeholder: Screenshot of the empty strategy builder canvas with the node palette open on the left. */}
+<img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas highlighted" />
 
-## 2. Add a market action
+1. The top bar has **New Strategy**, **Run Demo**, **Run Live**, and **Connect**.
+2. The left panel lets you choose markets, conditions, wallet actions, and utility actions.
+3. The canvas is where your strategy appears.
 
-Choose a market from the palette and add it to the canvas. A market action tells Miramarket where capital can move.
+## 2. Choose a market
 
-For a basic strategy, choose a binary market and select the outcome you want to buy, such as `YES` or `NO`.
+Open the **Market** tab. Use **Trending**, a category filter, or the search box to find a market.
+
+<img src="/images/tutorial/market-card-outcomes.png" alt="A market card with YES and NO outcome buttons highlighted" />
+
+Pick the outcome you want the strategy to buy. Most markets show `YES` and `NO` prices.
 
 ## 3. Add a condition
 
-Add a condition when you want the strategy to wait for a rule before choosing an action.
+Open the **Condition** tab and choose **Price Condition**.
 
-Common first conditions include:
+<img src="/images/tutorial/condition-panel.png" alt="Condition tab with Price Condition, Time Condition, and Resolution highlighted" />
 
-- Price crosses above a threshold.
-- Price crosses below a threshold.
-- A time condition triggers before close.
-- A performance condition reaches a target.
+A condition tells the strategy when to act. For your first strategy, use a price rule such as "if the price is above 50 cents."
 
-## 4. Connect the condition to actions
+## 4. Add the market action
 
-A condition and its selectable actions form a decision group. The condition decides which action runs.
+Click a market card to add it to the strategy. The canvas shows the condition and the market action.
 
-Use a single action for winner-takes-all logic. Use multiple actions when you want a `SPLIT_100` allocation.
+<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple strategy with a price condition and market action highlighted" />
 
-{/* Image placeholder: Screenshot of one condition connected to two actions with visible allocation percentages. */}
+The condition is the rule. The action is what happens if the rule is met.
 
-## 5. Set initial principal
+## 5. Run a demo
 
-Set `initial_principal_usd` to the amount of capital the strategy can allocate.
+Click **Run Demo**.
 
-Miramarket validates that the amount is positive. For live market actions, validation also checks whether the strategy has enough principal to satisfy minimum order constraints after splits and estimated fees.
+<img src="/images/tutorial/top-bar-run-demo-connect.png" alt="Top bar with Run Demo and Connect highlighted" />
 
-## 6. Validate the strategy
+A demo run does not place real trades. Use it to check whether the strategy behaves the way you expect.
 
-Use the validation result in the builder before you run or export the strategy.
+## 6. Go live only when ready
 
-A valid strategy has:
+Use **Connect** to sign in with a wallet. Then use the run menu to choose **Run Live**.
 
-- One root node.
-- Valid condition and action node types.
-- Decision groups for every condition.
-- Valid `SPLIT_100` allocations.
-- No graph cycles.
-- Market token IDs for market actions.
+<img src="/images/tutorial/run-options.png" alt="Run menu with Run Demo and Run Live highlighted" />
 
-## 7. Export strategy JSON
+Live runs can use real funds. Review the market, outcome, amount, and condition before running live.
 
-Export the strategy when you want a portable representation.
+## Next steps
 
-See [strategy JSON format](/strategy-reference/json-format) for the canonical fields and [examples](/strategy-reference/examples) for complete objects.
+Read the [full tutorial](/strategy-builder/tutorial) for a slower walkthrough, or use the [glossary](/strategy-builder/glossary) if a term is unfamiliar.

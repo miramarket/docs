@@ -1,6 +1,6 @@
 # Contributing
 
-Write Miramarket documentation for external users, developers, and AI agents.
+Write Miramarket documentation for external users who want to understand and use the website and strategy builder.
 
 ## Style
 
@@ -8,15 +8,15 @@ Write Miramarket documentation for external users, developers, and AI agents.
 - Keep sentences concise.
 - Use sentence case for headings.
 - Bold UI labels.
-- Use code formatting for exact JSON field names and literal values.
-- Prefer complete JSON examples when documenting strategies.
+- Use code formatting for literal values such as `YES`, `NO`, and `app.miramarket.org`.
+- Explain concepts in plain language before adding detail.
 
 ## Scope
 
-- Document the strategy builder, strategy JSON format, and public validation behavior.
+- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, and demo/live runs.
 - Do not document internal backend implementation details.
 - Do not document Convex internals.
-- Do not document CLI behavior yet. Use "Coming soon." for CLI pages.
+- Do not document command line behavior yet. Use "Coming soon." for CLI pages.
 
 ## Verification
 

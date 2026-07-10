@@ -1,128 +1,44 @@
 ---
-title: "Validation"
-description: "Understand public validation rules for Miramarket strategies."
+title: "Before you run live"
+description: "Review a strategy before using real funds."
 ---
 
-Validation checks whether strategy JSON is structurally safe and internally consistent.
+Use this checklist before **Run Live**.
 
-The builder validates before treating a strategy as ready. You should fix every validation error before running, sharing, or generating strategy JSON for another system.
+## Check the market
 
-## Shape rules
+- Does the market question match your idea?
+- Do you understand how the market resolves?
+- Is the market still active?
+- Is the close time acceptable?
 
-The top-level strategy must be an object with these fields:
+## Check the outcome
 
-- `version`
-- `strategy_id`
-- `initial_principal_usd`
-- `root_node_id`
-- `nodes`
-- `edges`
-- `decision_groups`
+- Did you choose `YES` or `NO` correctly?
+- Does the selected side match the result you want?
+- Is the current price acceptable?
 
-`nodes`, `edges`, and `decision_groups` must be arrays.
+## Check the condition
 
-`initial_principal_usd` must be a finite number greater than `0`.
+- Is the condition type correct?
+- Is the direction correct, such as greater than or less than?
+- Is the threshold reasonable?
+- Does a time condition use the right close time or trigger time?
 
-## Node rules
+## Check the action
 
-Every node needs a unique `node_id`.
+- Does the action do what you expect?
+- Is the allocation correct?
+- If funds move to wallet, is that intentional?
 
-Every node must have `type: "CONDITION"` or `type: "ACTION"`.
+## Run demo first
 
-Every node must have `level >= 0`.
+<img src="/images/tutorial/run-options.png" alt="Run menu with Run Demo and Run Live highlighted" />
 
-`root_node_id` must reference an existing node.
+Use **Run Demo** before **Run Live**. Demo mode helps you catch wrong markets, wrong sides, and wrong rules.
 
-Market actions require `target.market.token_id`.
+## Understand the risk
 
-## Edge rules
+Live prediction market trading can lose money. Prices can move, liquidity can change, execution can fail, and a strategy can behave differently than expected.
 
-Edges only encode continuation from an action to a later condition.
-
-Valid edge direction:
-
-```text
-ACTION -> CONDITION
-```
-
-Invalid edge directions:
-
-```text
-ACTION -> ACTION
-CONDITION -> CONDITION
-CONDITION -> ACTION
-```
-
-Condition-to-action selection belongs in `decision_groups`, not `edges`.
-
-## Level rules
-
-The root node is level `0`.
-
-A condition and its selected actions must have the same level.
-
-When an action continues to a child condition, the child condition level must be the action level plus `1`.
-
-## Decision group rules
-
-Every condition must appear in exactly one decision group.
-
-Every decision group must reference one condition and at least one action.
-
-The decision group condition and actions must all be on the same level.
-
-If `mode` is `SPLIT_100`, the referenced actions must have `allocation_pct` values that sum to `100`.
-
-## Timing rules
-
-`TIME_SINCE_GROUP_SECONDS` requires a `timing` object.
-
-For `BEFORE_CLOSE`, `seconds_before_close` must be greater than `0`.
-
-For `ABSOLUTE_TIME`, `absolute_trigger_time_iso` must be present.
-
-Non-time signals must not include `timing`.
-
-## Graph rules
-
-The graph must be acyclic. A strategy cannot loop back to a prior node.
-
-## Fee-aware principal check
-
-For market actions, validation can estimate the minimum `initial_principal_usd` needed to clear market order minimums after allocation splits and estimated fees.
-
-The estimate uses:
-
-| Value | Meaning |
-| --- | --- |
-| `CLOB_MIN_USD` | Minimum order size in dollars. |
-| `CLOB_MIN_SHARES` | Minimum number of shares. |
-| `MAX_TRADING_FEE_RATE` | Conservative fee estimate. |
-| `DEFAULT_LEAF_PRICE` | Fallback price when no current price is supplied. |
-
-If validation reports that principal is too low, increase `initial_principal_usd`, reduce split depth, or provide accurate `current_price` values for market targets.
-
-## Common errors
-
-| Error pattern | Fix |
-| --- | --- |
-| `nodes must be an array` | Set `nodes` to an array, even for generated JSON. |
-| `root_node_id does not reference an existing node` | Make `root_node_id` match a `node_id`. |
-| `must be ACTION -> CONDITION` | Move condition-to-action relationships into `decision_groups`. |
-| `split allocation is ..., expected 100` | Adjust action `allocation_pct` values. |
-| `requires target.market.token_id` | Add the outcome token ID to the market action. |
-| `Graph contains a cycle` | Remove the edge that loops back to an earlier node. |
-
-## Agent checklist
-
-Before returning generated strategy JSON, verify:
-
-- `initial_principal_usd > 0`.
-- `root_node_id` exists in `nodes`.
-- Every `node_id` is unique.
-- Every condition has exactly one decision group.
-- Every decision group action ID exists and references an action.
-- Every split group sums to `100`.
-- Every edge is action-to-condition.
-- No cycle exists.
-- Every market action has `token_id`.
+Only use **Run Live** when you are comfortable with those risks.

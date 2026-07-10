@@ -1,72 +1,34 @@
 ---
-title: "Strategy builder overview"
-description: "Understand the visual model behind Miramarket strategies."
+title: "Strategy builder basics"
+description: "Understand the main parts of the Miramarket builder."
 ---
 
-The strategy builder is a visual canvas for creating automated prediction market strategies. You arrange conditions and actions into a graph, then Miramarket converts that graph into strategy JSON.
+The strategy builder is the workspace where you create a strategy visually. You use the left panel to choose building blocks, then place them on the canvas.
 
-{/* Image placeholder: Full strategy builder screen showing the left node palette, central canvas, and selected node details. */}
+<img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas highlighted" />
 
-## Strategy graph
+## Main areas
 
-A strategy graph has two node types:
-
-| Node type | Purpose |
+| Area | What it does |
 | --- | --- |
-| `CONDITION` | Watches a signal and decides which action or actions can run. |
-| `ACTION` | Moves capital, places a trade, holds a position, or exits to a wallet or vault. |
+| Top bar | Starts a new strategy, runs a demo, opens run options, and connects a wallet. |
+| Left panel | Shows markets, conditions, wallet actions, and utility actions. |
+| Canvas | Shows the strategy you are building. |
 
-Conditions decide. Actions move capital.
+## Basic flow
 
-## Root node
+1. Choose a market or condition from the left panel.
+2. Add it to the canvas.
+3. Set the rule or outcome.
+4. Run a demo.
+5. Review the result before using real funds.
 
-Every strategy has exactly one root node. The root may be a condition or an action.
+## What to build first
 
-If the root is a condition, the strategy waits for that condition and then selects actions in its decision group.
+Start with one condition and one action. For example: "If a market price is above 50 cents, buy `YES`."
 
-If the root is an action, the strategy immediately allocates capital to that action. The action may then lead to child conditions.
+That pattern is enough to learn how the builder works.
 
-## Levels
+## Learn more
 
-Levels describe graph depth.
-
-- The root node is at `level: 0`.
-- A condition and the actions it selects stay on the same level.
-- Level only increases when an action leads to a child condition.
-
-This keeps decision groups readable and makes the strategy JSON deterministic.
-
-## Decision groups
-
-A decision group contains one condition and one or more actions at the same level.
-
-Use a decision group when a condition should select capital movement.
-
-| Mode | Meaning |
-| --- | --- |
-| `SINGLE` | The condition selects one action. |
-| `SPLIT_100` | The condition selects multiple actions, and their `allocation_pct` values must sum to `100`. |
-
-{/* Image placeholder: Close-up of a decision group with one condition and two same-level actions connected by a left rail. */}
-
-## Canvas workflow
-
-You typically build in this order:
-
-1. Add a market, wallet, vault, or hold action.
-2. Add a condition when you need decision logic.
-3. Connect the condition to one or more actions.
-4. Set allocations for split groups.
-5. Add child conditions after actions when the strategy should continue.
-6. Validate the strategy.
-7. Export strategy JSON.
-
-## Agent guidance
-
-When generating strategy JSON, preserve these rules:
-
-- Use `CONDITION` only for decision logic.
-- Use `ACTION` only for capital movement or trade execution.
-- Put every condition in exactly one decision group.
-- Use edges only for action-to-condition continuation.
-- Encode condition-to-action selection through `decision_groups`, not `edges`.
+Use the [tutorial](/strategy-builder/tutorial) for a full walkthrough, or use the [glossary](/strategy-builder/glossary) for definitions.

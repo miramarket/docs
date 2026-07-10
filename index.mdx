@@ -1,36 +1,37 @@
 ---
 title: "Miramarket docs"
-description: "Build, validate, and share automated prediction market strategies."
+description: "Learn how to build and test prediction market strategies with Miramarket."
 ---
 
-Miramarket helps you build automated strategies for prediction markets. A strategy combines conditions, actions, allocations, and market targets into portable strategy JSON.
+Miramarket helps you build prediction market strategies without writing code. You choose markets, add simple rules, and test what the strategy would do before using real funds.
 
-These docs are written for humans and AI agents. You can read them as a product guide, or use the structured examples to generate valid strategy JSON.
+Start with **Run Demo**. Use **Run Live** only when you understand the strategy and are ready to risk funds.
+
+<img src="/images/tutorial/landing-launch-app.png" alt="Miramarket website with the Launch App button highlighted" />
 
 ## What you can do
 
-- Build a strategy visually with the strategy builder.
-- Connect market conditions to trade and capital movement actions.
-- Split capital across multiple actions with explicit percentages.
-- Use recurring markets so a strategy can follow an auto-rolling market family.
-- Export strategy JSON for review, sharing, or future automation.
-- Validate strategy JSON before you run it.
-
-## Core concepts
-
-| Concept | Meaning |
-| --- | --- |
-| Strategy | A complete automation plan. |
-| Condition | Decision logic that watches a market, time, or performance signal. |
-| Action | A capital movement or trade execution step. |
-| Decision group | One condition and the actions it can select. |
-| Recurring market | An auto-rolling family of markets, such as a repeated hourly or daily market. |
-| Strategy JSON | The portable external representation of a strategy. |
+- Open the strategy builder from **Launch App**.
+- Browse prediction markets from the **Market** tab.
+- Choose a `YES` or `NO` outcome.
+- Add conditions such as price, time, or resolution rules.
+- Add actions such as buying an outcome, holding, or moving funds to a wallet.
+- Test a strategy with **Run Demo** before using **Run Live**.
 
 ## Start here
 
-Use the [quickstart](/quickstart) if you want to build your first strategy.
+| If you want to... | Go to |
+| --- | --- |
+| Build your first strategy fast | [Quickstart](/quickstart) |
+| Follow a full walkthrough | [Strategy builder tutorial](/strategy-builder/tutorial) |
+| See simple strategy ideas | [Examples](/strategy-builder/examples) |
+| Learn the words used in the app | [Glossary](/strategy-builder/glossary) |
+| Understand demo vs live runs | [Run demo or live](/strategy-builder/run-demo-live) |
 
-Use the [strategy JSON reference](/strategy-reference/json-format) if you are generating strategies programmatically.
+## Open the app
 
-Use the [validation guide](/strategy-builder/validation) if you need to explain or fix validation errors.
+Use the live builder at [app.miramarket.org](https://app.miramarket.org).
+
+Use the website at [miramarket.org](https://miramarket.org) to learn what Miramarket does and launch the app.
+
+Prediction markets involve risk. Miramarket is not financial, investment, legal, or tax advice.

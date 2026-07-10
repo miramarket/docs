@@ -11,13 +11,16 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Start here",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Learn Miramarket",
             "pages": [
               "index",
-              "quickstart"
+              "quickstart",
+              "strategy-builder/tutorial",
+              "strategy-builder/examples",
+              "strategy-builder/glossary"
             ]
           }
         ]
@@ -26,28 +29,16 @@
         "tab": "Strategy builder",
         "groups": [
           {
-            "group": "Build strategies",
+            "group": "Using the builder",
             "pages": [
               "strategy-builder/overview",
               "strategy-builder/build-a-strategy",
+              "strategy-builder/markets",
               "strategy-builder/conditions",
               "strategy-builder/actions",
               "strategy-builder/recurring-markets",
+              "strategy-builder/run-demo-live",
               "strategy-builder/validation"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Strategy reference",
-        "groups": [
-          {
-            "group": "Reference",
-            "pages": [
-              "strategy-reference/json-format",
-              "strategy-reference/types",
-              "strategy-reference/examples",
-              "strategy-reference/validation-functions"
             ]
           }
         ]
@@ -67,14 +58,19 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Strategy JSON",
-          "href": "/strategy-reference/json-format",
-          "icon": "brackets-curly"
+          "anchor": "Quickstart",
+          "href": "/quickstart",
+          "icon": "rocket"
         },
         {
-          "anchor": "Validation",
-          "href": "/strategy-builder/validation",
-          "icon": "shield-check"
+          "anchor": "Glossary",
+          "href": "/strategy-builder/glossary",
+          "icon": "book-open"
+        },
+        {
+          "anchor": "Run demo or live",
+          "href": "/strategy-builder/run-demo-live",
+          "icon": "play"
         }
       ]
     }
@@ -87,8 +83,8 @@
     "links": [],
     "primary": {
       "type": "button",
-      "label": "Strategy builder",
-      "href": "/strategy-builder/overview"
+      "label": "Launch App",
+      "href": "https://app.miramarket.org"
     }
   },
   "contextual": {

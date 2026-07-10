@@ -1,135 +1,56 @@
 ---
 title: "Conditions"
-description: "Use conditions to express decision logic in a Miramarket strategy."
+description: "Use conditions to decide when a strategy should act."
 ---
 
-A condition watches a signal and decides which action or actions can run.
+A condition is a rule. The strategy checks the rule before taking an action.
 
-In strategy JSON, a condition node has `type: "CONDITION"` and a `condition` object.
+<img src="/images/tutorial/condition-panel.png" alt="Condition tab with Price Condition, Time Condition, and Resolution highlighted" />
 
-## Condition fields
+## Price condition
 
-| Field | Meaning |
-| --- | --- |
-| `watch` | The market or market selector to observe. |
-| `signal` | The value to evaluate. |
-| `trigger` | The crossing direction. |
-| `threshold` | The numeric trigger value. |
-| `timing` | Optional timing data for time conditions. |
-| `reference` | Optional reference mode for return or PnL conditions. |
-| `stabilizers` | Optional debounce-style controls. |
-| `conjuncts` | Optional additional `AND` clauses. |
+Use **Price Condition** when the current market price matters.
 
-## Signals
+Examples:
 
-| `signal` | Use when |
-| --- | --- |
-| `IMPLIED_PROBABILITY` | You want to react to market price or probability. |
-| `ROI_PCT` | You want to react to return on investment. |
-| `PNL_USD` | You want to react to profit or loss in dollars. |
-| `TIME_SINCE_GROUP_SECONDS` | You want to trigger after time has passed in a decision group. |
-| `TIME_TO_RESOLUTION_SECONDS` | You want to trigger based on time remaining before resolution. |
+- "If price is greater than 60 cents, buy `YES`."
+- "If price is less than 40 cents, move funds to wallet."
 
-## Triggers
+Price conditions are useful when you want the market to reach a certain confidence level before acting.
 
-Use `CROSS_ABOVE` when the signal must move above `threshold`.
+## Time condition
 
-Use `CROSS_BELOW` when the signal must move below `threshold`.
+Use **Time Condition** when the strategy should act before close or at a chosen time.
 
-## Market watch
+Examples:
 
-`watch` identifies the market and outcome the condition observes.
+- "If the market is close to ending, move funds to wallet."
+- "At a specific time, buy the selected outcome."
 
-```json
-{
-  "venue": "POLYMARKET",
-  "market_id": "btc-above-100k-may-2026",
-  "outcome_token": "YES",
-  "token_id": "1234567890"
-}
-```
+Time conditions are useful near resolution or for markets that change quickly.
 
-For recurring markets, add `watch_selector`.
+## Resolution
 
-```json
-{
-  "venue": "POLYMARKET",
-  "market_id": "btc-hourly-reference-market",
-  "outcome_token": "YES",
-  "watch_selector": {
-    "recurring_tag_id": 102175,
-    "recurring_label": "1h",
-    "recurring_family_key": "series:btc-hourly",
-    "topic_key": "btc",
-    "fallback_market_id": "btc-hourly-reference-market",
-    "auto_roll": true
-  }
-}
-```
+Use **Resolution** when the next step depends on how a market finishes.
 
-## Time conditions
+Examples:
 
-Time conditions require a `timing` object.
+- "If the market resolves `YES`, move to another market."
+- "If the market resolves `NO`, stop and return to wallet."
 
-For a trigger before close:
+Resolution conditions are useful for follow-up strategies.
 
-```json
-{
-  "signal": "TIME_SINCE_GROUP_SECONDS",
-  "trigger": "CROSS_ABOVE",
-  "threshold": 0,
-  "timing": {
-    "mode": "BEFORE_CLOSE",
-    "seconds_before_close": 300
-  }
-}
-```
+## Choose the right condition
 
-For an absolute trigger time:
+Ask yourself:
 
-```json
-{
-  "signal": "TIME_SINCE_GROUP_SECONDS",
-  "trigger": "CROSS_ABOVE",
-  "threshold": 0,
-  "timing": {
-    "mode": "ABSOLUTE_TIME",
-    "absolute_trigger_time_iso": "2026-05-18T18:00:00Z"
-  }
-}
-```
+- Do I care about price? Use **Price Condition**.
+- Do I care about timing? Use **Time Condition**.
+- Do I care about the final result? Use **Resolution**.
 
-## AND clauses
+## Common mistakes
 
-Use `conjuncts` when a condition needs more than one clause.
-
-All clauses must pass for the condition to pass.
-
-```json
-{
-  "condition": {
-    "watch": {
-      "venue": "POLYMARKET",
-      "market_id": "btc-above-100k-may-2026",
-      "outcome_token": "YES",
-      "token_id": "1234567890"
-    },
-    "signal": "IMPLIED_PROBABILITY",
-    "trigger": "CROSS_ABOVE",
-    "threshold": 0.6,
-    "conjuncts": [
-      {
-        "watch": {
-          "venue": "POLYMARKET",
-          "market_id": "eth-above-5k-may-2026",
-          "outcome_token": "YES",
-          "token_id": "9876543210"
-        },
-        "signal": "IMPLIED_PROBABILITY",
-        "trigger": "CROSS_BELOW",
-        "threshold": 0.4
-      }
-    ]
-  }
-}
-```
+- Setting the price direction backwards.
+- Choosing the wrong `YES` or `NO` outcome.
+- Using a time rule without checking the market close time.
+- Running live before testing with **Run Demo**.
