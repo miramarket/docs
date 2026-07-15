@@ -6,7 +6,7 @@ The docs focus on:
 
 - Using the Miramarket website and app
 - Building strategies with the visual strategy builder
-- Understanding markets, conditions, actions, and demo/live runs
+- Understanding markets, conditions, actions, and simulation/live runs
 - Helping non-technical users get started safely
 
 ## Local preview

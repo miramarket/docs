@@ -13,7 +13,7 @@ Write Miramarket documentation for external users who want to understand and use
 
 ## Scope
 
-- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, and demo/live runs.
+- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, and simulation/live runs.
 - Do not document internal backend implementation details.
 - Do not document Convex internals.
 - Do not document command line behavior yet. Use "Coming soon." for CLI pages.
