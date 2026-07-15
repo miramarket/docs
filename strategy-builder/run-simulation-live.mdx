@@ -1,15 +1,15 @@
 ---
-title: "Run Demo and Run Live"
+title: "Simulation and Live Runs"
 description: "Test a strategy safely, then understand what changes when a run can use real funds."
 ---
 
-Miramarket gives you two ways to run a strategy. **Run Demo** simulates the strategy. **Run Live** can use real funds when its conditions trigger.
+Miramarket gives you two ways to run a strategy. **Simulate** runs the strategy without placing real trades. **Run Live** can use real funds when its conditions trigger.
 
-<img src="/images/tutorial/run-options.png" alt="Run menu with Run Demo and Run Live shown" />
+<img src="/images/tutorial/run-options.png" alt="Run menu with Simulate and Run Live shown" />
 
-## Run Demo
+## Simulation
 
-Use **Run Demo** before you use **Run Live**. It validates the strategy, saves a demo version, and starts a simulated run without placing real trades.
+Use **Simulate** before you use **Run Live**. It validates the strategy, saves a simulation version, and starts a simulated run without placing real trades.
 
 Before you start, review:
 
@@ -18,7 +18,7 @@ Before you start, review:
 - Each condition and its threshold or timing.
 - Each action and its allocation.
 
-Demo follows the settings you supplied. It can reveal an incomplete or invalid strategy, but it cannot decide whether those settings match your trading idea.
+Simulation follows the settings you supplied. It can reveal an incomplete or invalid strategy, but it cannot decide whether those settings match your trading idea.
 
 ## Run Live
 
@@ -30,7 +30,7 @@ Before a live run starts, Miramarket asks you to confirm. Live trades do not nec
 
 Use **Connect** in the top bar when you are ready to sign in with a wallet. Connecting a wallet does not start a live run.
 
-<img src="/images/tutorial/top-bar-run-demo-connect.png" alt="Top bar with Run Demo and Connect shown" />
+<img src="/images/tutorial/top-bar-run-simulation-connect.png" alt="Top bar with Simulate and Connect shown" />
 
 Connecting a wallet does not mean you should run live immediately. Review the strategy first.
 
@@ -38,7 +38,7 @@ Connecting a wallet does not mean you should run live immediately. Review the st
 
 1. Build the strategy.
 2. Check every market, side, condition, and allocation.
-3. Run a demo.
+3. Run a simulation.
 4. Review the result and revise the strategy if needed.
 5. Read the [live-run checklist](/strategy-builder/validation).
 6. Connect a wallet.
@@ -51,7 +51,7 @@ Do not run live if:
 - You do not understand the market.
 - You are unsure whether `YES` or `NO` is correct.
 - The price, close time, or active recurring window looks wrong.
-- You have not tested with **Run Demo**.
+- You have not tested with **Simulate**.
 - You are not comfortable losing funds.
 
 ## While a run is active

@@ -20,7 +20,7 @@
 - Use "condition" for a rule that decides when the strategy should act.
 - Use "action" for what the strategy does after a rule is met.
 - Use "recurring market" for a market family that repeats over time.
-- Use "Run Demo" for simulated runs.
+- Use "Run Simulation" for simulated runs.
 - Use "Run Live" for runs that can use real funds.
 
 ## Style preferences
@@ -36,7 +36,7 @@
 
 ## Content boundaries
 
-- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, glossary terms, and demo/live behavior.
+- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, glossary terms, and simulation/live behavior.
 - Do not document Convex internals.
 - Do not document backend implementation details.
 - Do not document command line behavior yet. CLI documentation should say "Coming soon."

@@ -33,7 +33,7 @@
           {
             "group": "Test and run",
             "pages": [
-              "strategy-builder/run-demo-live",
+              "strategy-builder/run-simulation-live",
               "strategy-builder/validation"
             ]
           },
@@ -71,8 +71,8 @@
           "icon": "book-open"
         },
         {
-          "anchor": "Run Demo and Run Live",
-          "href": "/strategy-builder/run-demo-live",
+          "anchor": "Simulation and Live Runs",
+          "href": "/strategy-builder/run-simulation-live",
           "icon": "play"
         }
       ]
@@ -104,5 +104,12 @@
   },
   "footer": {
     "socials": {}
-  }
+  },
+  "redirects": [
+    {
+      "source": "/strategy-builder/run-demo-live",
+      "destination": "/strategy-builder/run-simulation-live",
+      "permanent": true
+    }
+  ]
 }

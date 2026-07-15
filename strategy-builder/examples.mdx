@@ -1,9 +1,9 @@
 ---
 title: "Strategy examples"
-description: "Use verified strategy patterns as a starting point for your own demo."
+description: "Use verified strategy patterns as a starting point for your own simulation."
 ---
 
-These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Run Demo**.
+These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Simulate**.
 
 ## Wait for a price threshold
 
@@ -13,7 +13,7 @@ Use this when you want a selected side to reach a specific displayed price befor
 2. Set the watched market, side, comparison, and threshold, such as greater than `60¢`.
 3. Add a market action for the side you want to buy.
 4. Confirm the action has a `100%` allocation.
-5. Run a demo.
+5. Run a simulation.
 
 Plain meaning: when the selected side reaches your threshold, the strategy tries to buy that side.
 
@@ -25,7 +25,7 @@ Use this when one market action should lead to another rule.
 2. Add a condition below that action.
 3. Configure the condition for the next price, time, or resolution check.
 4. Add the next action after the condition.
-5. Run a demo.
+5. Run a simulation.
 
 Plain meaning: the strategy takes one step, then waits for another rule before continuing.
 
@@ -37,7 +37,7 @@ Use this when the timing of a market matters.
 2. Choose before-close timing or a specific time.
 3. Add the market action that should follow.
 4. Check the market close time and the trigger value.
-5. Run a demo.
+5. Run a simulation.
 
 Plain meaning: the strategy waits until the configured time rule is met before continuing.
 
@@ -49,7 +49,7 @@ Use this when one condition should direct the available amount to more than one 
 2. Add two actions after that condition.
 3. Set allocations, such as 70% to a market action and 30% to **Wallet**.
 4. Confirm the total is `100%`.
-5. Run a demo.
+5. Run a simulation.
 
 Plain meaning: when the condition is met, the strategy divides the available amount between the actions you configured.
 
@@ -62,6 +62,6 @@ Use this for a repeated market family, such as a short time-window market.
 3. Pick a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**.
 4. Choose the active market window and side.
 5. Add a condition if the market action should wait for a rule.
-6. Run a demo.
+6. Run a simulation.
 
 Plain meaning: the strategy uses the recurring market family and refreshes its selected market as the family changes.
