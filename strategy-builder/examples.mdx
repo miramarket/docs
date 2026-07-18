@@ -1,9 +1,20 @@
 ---
 title: "Strategy examples"
-description: "Use verified strategy patterns as a starting point for your own simulation."
+description: "Start with simple strategy patterns and test each one with Simulate."
 ---
 
-These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Simulate**.
+These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Simulate**. Each sequence is read from left to right or top to bottom on the canvas.
+
+<img src="/images/tutorial/simple-strategy-canvas.png" alt="Simple price condition followed by a market action on the strategy canvas" />
+
+| Start here if you want to... | Try this example |
+| --- | --- |
+| Wait for one price | [Wait for a price threshold](#wait-for-a-price-threshold) |
+| Act at a planned time | [Act at a time](#act-at-a-time) |
+| Divide an amount | [Split between a market and Wallet](#split-between-a-market-and-wallet) |
+| Keep a position open | [Hold before another check](#hold-before-another-check) |
+| Use a final result | [Continue after resolution](#continue-after-resolution) |
+| Choose from grouped outcomes | [Choose a grouped event outcome](#choose-a-grouped-event-outcome) |
 
 ## Wait for a price threshold
 
@@ -41,17 +52,60 @@ Use this when the timing of a market matters.
 
 Plain meaning: the strategy waits until the configured time rule is met before continuing.
 
-## Split a decision between actions
+## Split between a market and Wallet
 
 Use this when one condition should direct the available amount to more than one action.
 
 1. Add a condition.
-2. Add two actions after that condition.
+2. Add a market action and **Wallet** after that condition.
 3. Set allocations, such as 70% to a market action and 30% to **Wallet**.
 4. Confirm the total is `100%`.
 5. Run a simulation.
 
 Plain meaning: when the condition is met, the strategy divides the available amount between the actions you configured.
+
+| Action | Allocation | Meaning |
+| --- | --- | --- |
+| Buy selected market side | `70%` | Put most of the available amount into the chosen market position. |
+| Wallet | `30%` | Direct the remaining amount to Wallet. |
+
+<img src="/images/tutorial/wallet-action.png" alt="Wallet action available from the Market tab" />
+
+## Hold before another check
+
+Use this when you want to keep a market position open and wait for a later rule.
+
+1. Add a market action for the side you want to hold.
+2. Add a **Time Condition** or **Price Condition** below that action.
+3. Add **Hold** after the later condition.
+4. Confirm Hold keeps the position or wallet allocation you expect.
+5. Run a simulation.
+
+Plain meaning: the strategy enters a position, waits for another rule, and keeps the selected allocation rather than changing it.
+
+## Continue after resolution
+
+Use this when the final result of one market decides what happens next.
+
+1. Add **Resolution** and select the market to resolve.
+2. Create the `YES` path and add the action it should take.
+3. Create the `NO` path and add its action.
+4. Review both paths. Each should make sense if that result occurs.
+5. Run a simulation.
+
+Plain meaning: the strategy waits for a known result, then follows the plan you set for that result.
+
+## Choose a grouped event outcome
+
+Use this when an event card lists mutually exclusive named outcomes, such as teams or candidates.
+
+1. Open **Market** and find the grouped event.
+2. Select one named outcome, such as Team A.
+3. Choose `YES` or `NO` for that exact outcome.
+4. Add a **Price Condition** first if you want to wait for a threshold.
+5. Run a simulation and confirm the selected named outcome on the canvas.
+
+Plain meaning: the strategy takes a side on one selected outcome. `NO` means that outcome does not happen; it does not pick a different outcome for you.
 
 ## Use a recurring market
 
@@ -65,3 +119,13 @@ Use this for a repeated market family, such as a short time-window market.
 6. Run a simulation.
 
 Plain meaning: the strategy uses the recurring market family and refreshes its selected market as the family changes.
+
+## Before every simulation
+
+1. Read each market question and resolution rule.
+2. Confirm every named outcome and `YES` or `NO` side.
+3. Confirm every price, time, or result rule.
+4. Confirm allocations in every split total `100%`.
+5. Confirm every condition that should move funds has a follow-up action.
+
+For the complete node reference, read [Strategy builder nodes](/strategy-builder/nodes).

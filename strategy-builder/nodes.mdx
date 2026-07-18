@@ -1,0 +1,59 @@
+---
+title: "Strategy builder nodes"
+description: "Understand every condition and action you can add to a Miramarket strategy."
+---
+
+Nodes are the building blocks on your canvas. Conditions decide when a strategy can continue. Actions decide what happens with the available amount.
+
+<img src="/images/tutorial/condition-panel.png" alt="Condition panel showing Price Condition, Time Condition, and Resolution" />
+
+## Node reference
+
+| Node | Type | Use it when | You choose |
+| --- | --- | --- | --- |
+| **Price Condition** | Condition | A market price, ROI, or PnL must reach a threshold. | The metric, comparison, value, and market to watch. |
+| **Time Condition** | Condition | A strategy should continue before close or at a chosen time. | A market and either a before-close offset or date and time. |
+| **Resolution** | Condition | The next step depends on how a market resolves. | The market and the result to follow. |
+| **Buy Market** | Action | You want to buy one selected market side. | A named outcome, `YES` or `NO`, and allocation. |
+| **Wallet** | Action | You want to direct part of the available amount to your wallet destination. | The allocation. |
+| **Hold** | Action | You want to keep the current market position open or leave funds in the wallet. | The allocation and what you want to hold. |
+
+## Start and continue
+
+You can start with a condition when you want to wait for a rule, or start with a market action when you want to enter immediately. Add a market, Wallet, or Hold action after a condition. Add another condition below a market action or Hold when the strategy should check a later rule.
+
+When one condition leads to several actions, those actions share the available amount. Their allocations must total `100%`.
+
+> Tip: a condition without an action only watches a rule. Add an action after it before you run a strategy.
+
+## Conditions at a glance
+
+| If you want to... | Use | Example |
+| --- | --- | --- |
+| Wait for a side to reach a threshold | **Price Condition** | "When `YES` is above `60¢`, buy." |
+| Wait until shortly before close | **Time Condition** | "Ten minutes before close, continue." |
+| Wait for a final result | **Resolution** | "If the selected outcome resolves `YES`, follow this path." |
+
+Price Condition can watch the market you are about to trade, a market from an earlier step, or another market you select. The market displayed inside the condition is the one being watched. It is not a second purchase.
+
+Read [Conditions](/strategy-builder/conditions) for setup details.
+
+## Actions at a glance
+
+| If you want to... | Use | Example |
+| --- | --- | --- |
+| Enter a prediction-market position | **Buy Market** | "Buy `YES` on the selected outcome." |
+| Reserve part of a split | **Wallet** | "Send 30% to Wallet." |
+| Keep exposure instead of changing it | **Hold** | "Keep 50% in the current market." |
+
+Read [Actions](/strategy-builder/actions) for allocation and continuation examples.
+
+## Read the canvas
+
+Follow the canvas from the first node:
+
+1. A condition states what must happen.
+2. The actions after it show where the available amount goes.
+3. A later condition below an action adds another check after that action.
+
+Use [Strategy examples](/strategy-builder/examples) to see complete patterns before you build your own.

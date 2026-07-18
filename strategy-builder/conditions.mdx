@@ -11,9 +11,17 @@ A condition is a rule on the canvas. When the rule is met, the strategy can cont
 
 Open **Condition** in the left panel. Click a card to add it at the current position, or drag it to place it before, after, or below another node. Configure the node after you add it.
 
+## Compare conditions
+
+| Condition | What it watches | Best for |
+| --- | --- | --- |
+| **Price Condition** | A market price, ROI, or PnL value | Waiting for a threshold before continuing. |
+| **Time Condition** | A market close time or calendar time | Timing a later step. |
+| **Resolution** | The final result of a selected market | Sending different outcomes down different paths. |
+
 ## Price Condition
 
-Use **Price Condition** when a selected market side must reach a price before the strategy continues. Choose the market and side to watch, then set the comparison and threshold.
+Use **Price Condition** when a selected market side must reach a price before the strategy continues. Choose the market and side to watch, then set the comparison and threshold. Depending on your strategy, it can watch the market you are about to trade, a market from an earlier step, or another market you select.
 
 Examples:
 
@@ -21,6 +29,8 @@ Examples:
 - "If the selected `NO` side is less than `40¢`, continue."
 
 Check the side and comparison carefully. `>` and `<` produce opposite behavior. A displayed market price is not a guarantee that an action will execute at that exact price.
+
+If you add more than one rule to the same condition, every rule must be met. For example, you can wait for a `YES` side to reach `60¢` **and** for the market to be within ten minutes of close.
 
 ## Time Condition
 
@@ -44,6 +54,15 @@ Examples:
 
 Use this condition only when you understand how the market resolves and what each branch of the strategy will do.
 
+## Before you run
+
+| Check | Why it matters |
+| --- | --- |
+| Watched market and side | A condition can watch a different market from the one an action buys. |
+| Metric and threshold | Price, ROI, and PnL are different measurements. |
+| Time mode | Market close and final resolution can happen at different times. |
+| Follow-up action | A condition without an action only watches; it does not move funds. |
+
 ## Choose the right condition
 
 Ask yourself:
@@ -58,3 +77,5 @@ Ask yourself:
 - Reversing a price comparison.
 - Treating market close and market resolution as the same moment.
 - Using **Run Live** before testing with **Simulate**.
+
+See [Strategy builder nodes](/strategy-builder/nodes) for a concise node reference and [Strategy examples](/strategy-builder/examples) for complete patterns.

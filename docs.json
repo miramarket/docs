@@ -24,6 +24,7 @@
           {
             "group": "Build a strategy",
             "pages": [
+              "strategy-builder/nodes",
               "strategy-builder/markets",
               "strategy-builder/conditions",
               "strategy-builder/actions",

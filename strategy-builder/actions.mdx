@@ -7,9 +7,17 @@ An action is a node from the **Market** tab. It tells the strategy what to do af
 
 Use the **Market** tab for ordinary markets, recurring markets, **Wallet**, and **Utility**. Click a card to add it, or drag it onto the canvas to choose its position.
 
+## Compare actions
+
+| Action | What it does | Common use |
+| --- | --- | --- |
+| **Buy Market** | Buys the selected `YES` or `NO` side. | Enter a market position. |
+| **Wallet** | Directs its allocation to your wallet destination. | Reserve part of a split. |
+| **Hold** | Keeps a market position open or leaves funds in the wallet. | Wait for a later rule without changing that allocation. |
+
 ## Buy a market outcome
 
-Market cards create a **buy market outcome** action. Select a named outcome when the card has more than one, then choose `YES` or `NO`. Click or drag the card to add that choice to the canvas.
+Market cards create a **Buy Market** action. Select a named outcome when the card has more than one, then choose `YES` or `NO`. Click or drag the card to add that choice to the canvas.
 
 Review the action node before you run:
 
@@ -43,6 +51,11 @@ Choose **Utility** in the **Market** tab to add **Hold**. Hold keeps the current
 
 Use Hold only when you understand the position that the strategy will keep. A Hold node may follow a market action and continue the strategy to another condition.
 
+**Hold** can mean two different things:
+
+- After a market action, it keeps that market position open.
+- In a wallet path, it leaves the allocation in the wallet.
+
 ## Allocation
 
 Allocation is the percentage of the available amount assigned to an action. A single action receives `100%` by default.
@@ -63,3 +76,5 @@ Example: a 70% market action and a 30% Wallet action split the available amount 
 Actions in **Simulate** are simulated. **Run Live** can use real funds when conditions trigger.
 
 Always review the action, side, and allocation in a simulation before using **Run Live**.
+
+See [Strategy builder nodes](/strategy-builder/nodes) for the complete node reference and [Strategy examples](/strategy-builder/examples) for a Wallet split and Hold pattern.
