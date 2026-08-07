@@ -20,8 +20,11 @@
 - Use "condition" for a rule that decides when the strategy should act.
 - Use "action" for what the strategy does after a rule is met.
 - Use "recurring market" for a market family that repeats over time.
+- Use "template" for a ready-made strategy a user can start from instead of building node by node.
 - Use "Run Simulation" for simulated runs.
 - Use "Run Live" for runs that can use real funds.
+- State that Polymarket is the currently supported venue.
+- Treat the live builder and **Run Live** as available features, not future features.
 
 ## Style preferences
 
@@ -40,5 +43,7 @@
 - Do not document Convex internals.
 - Do not document backend implementation details.
 - Do not document command line behavior yet. CLI documentation should say "Coming soon."
+- Describe signing in and adding funds factually (sign in, then deposit by card, exchange transfer, or wallet transfer) without asserting a custodial or non-custodial claim, and note that it is separate from starting a live run.
+- Do not imply that execution or fills are guaranteed.
 - Do not document unrelated app, service, monitoring, deployment, or internal testing details.
 - If a screenshot would help, use a real app screenshot with a clear highlight or caption.

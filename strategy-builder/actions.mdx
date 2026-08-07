@@ -38,10 +38,12 @@ Choose **Wallet** in the **Market** tab to add a Wallet action. A Wallet action 
 
 <img src="/images/tutorial/wallet-action.png" alt="Wallet action card in the Market tab shown" />
 
-**Connect** and a Wallet action are different:
+**Sign in** and a Wallet action are different:
 
-- **Connect** signs you in with a wallet so that **Run Live** can become available.
+- **Sign in** sets up your account, which is required before you can use **Run Live**.
 - A Wallet action is a node in the strategy itself.
+
+Signing in and adding funds does not start a live run. See [Simulation and Live Runs](/strategy-builder/run-simulation-live) for the sign-in and funding flow.
 
 ## Hold
 
@@ -73,7 +75,7 @@ Example: a 70% market action and a 30% Wallet action split the available amount 
 
 ## Simulation vs live
 
-Actions in **Simulate** are simulated. **Run Live** can use real funds when conditions trigger.
+Actions in **Simulate** are simulated. **Run Live** is available and can use real funds when conditions trigger. Execution and fills are not guaranteed.
 
 Always review the action, side, and allocation in a simulation before using **Run Live**.
 

@@ -11,17 +11,19 @@ You will create a strategy with one rule and one action:
 
 > When the price condition is met, buy the `YES` or `NO` side you selected.
 
-The exact market can change over time. Choose an active market you understand and read its resolution rules before adding it.
+The exact market can change over time. Miramarket currently supports Polymarket. Choose an active market you understand and read its resolution rules before adding it.
 
 ## 1. Open the builder
 
 Go to [app.miramarket.org](https://app.miramarket.org).
 
-<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple condition and market action on the Miramarket strategy canvas" />
+<img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas shown" />
 
-1. The top bar includes **New Strategy**, **Simulate**, the run menu, and **Connect**.
+1. The top bar includes **New Strategy**, **Share**, **Simulate**, the run menu, and **Sign in**.
 2. Use **Condition** and **Market** in the left panel to find nodes.
 3. The canvas is where the strategy appears.
+
+This guide builds a strategy node by node. If you would rather start from a ready-made pattern, use [Strategy templates](/strategy-builder/templates) instead and come back here for how each piece works.
 
 ## 2. Choose a market and side
 
@@ -65,10 +67,10 @@ If the strategy is not what you meant, edit the node or use **New Strategy** to 
 
 Click **Simulate**.
 
-<img src="/images/tutorial/landing-launch-app.png" alt="Miramarket strategy builder landing page with the Launch App button" />
-
 A simulation run does not place real trades. It validates the strategy and starts a simulated run. Review the market, side, condition, and allocation first. A simulation follows the settings you gave it; it cannot tell you whether those settings match your intent.
 
 ## What next
 
-Read [Strategy builder overview](/strategy-builder/overview) to understand the canvas, [Strategy builder nodes](/strategy-builder/nodes) for every available node, [Markets and outcomes](/strategy-builder/markets) to choose a side correctly, or [Simulation and Live Runs](/strategy-builder/run-simulation-live) before connecting a wallet.
+The live builder and **Run Live** are available. Before using real funds, read [Simulation and Live Runs](/strategy-builder/run-simulation-live). Signing in and adding funds does not start a live run, and execution or fills are not guaranteed.
+
+Try [Strategy templates](/strategy-builder/templates) for ready-made patterns, read [Strategy builder overview](/strategy-builder/overview) to understand the canvas, [Strategy builder nodes](/strategy-builder/nodes) for every available node, or [Markets and outcomes](/strategy-builder/markets) to choose a side correctly.

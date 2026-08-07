@@ -3,9 +3,11 @@ title: "Simulation and Live Runs"
 description: "Test a strategy safely, then understand what changes when a run can use real funds."
 ---
 
-Miramarket gives you two ways to run a strategy. **Simulate** runs the strategy without placing real trades. **Run Live** can use real funds when its conditions trigger.
+Miramarket gives you two available ways to run a strategy in the live builder. **Simulate** runs the strategy without placing real trades. **Run Live** can use real funds on Polymarket, the currently supported venue, when its conditions trigger.
 
-<img src="/images/tutorial/simple-strategy-canvas.png" alt="A simple strategy ready to review before a simulation or live run" />
+<img src="/images/tutorial/run-options.png" alt="Run menu with Simulate and Run Live shown" />
+
+Live trading availability also depends on your region. If it is unavailable, the run menu shows **Run Live** as disabled and Simulation is your only option.
 
 ## Simulation
 
@@ -22,17 +24,27 @@ Simulation follows the settings you supplied. It can reveal an incomplete or inv
 
 ## Run Live
 
-Use **Run Live** only when you are ready to use real funds. The run menu keeps **Run Live** unavailable until you connect a wallet.
+**Run Live** is available. Use it only when you are ready to use real funds. The run menu keeps **Run Live** unavailable until you sign in, and it can also stay unavailable where live trading is not supported in your region.
 
-Before a live run starts, Miramarket asks you to confirm. Live trades do not necessarily happen immediately; they can execute when the strategy conditions trigger.
+Before a live run starts, Miramarket asks you to confirm. Live trades do not necessarily happen immediately; the strategy can attempt them when its conditions trigger. Execution and fills are not guaranteed.
 
-## Connect wallet
+## Sign in and add funds
 
-Use **Connect** in the top bar when you are ready to sign in with a wallet. Connecting a wallet does not start a live run.
+Use **Sign in** in the top bar when you are ready to use **Run Live**. Miramarket sets up your account, powered by [Privy](https://privy.io).
 
-<img src="/images/tutorial/landing-launch-app.png" alt="Miramarket strategy builder landing page with the Launch App button" />
+<img src="/images/tutorial/account-menu.png" alt="Account menu with Deposit, Withdraw, Strategies, and Sign out shown" />
 
-Connecting a wallet does not mean you should run live immediately. Review the strategy first.
+Add funds from **Deposit**:
+
+<img src="/images/tutorial/deposit-modal.png" alt="Add funds dialog with Pay with card, Transfer from an exchange, and Transfer from a wallet shown" />
+
+- Pay with card
+- Transfer from an exchange
+- Transfer from a wallet
+
+Adding funds does not start a live run; you must separately choose and confirm **Run Live**.
+
+Signing in and adding funds does not mean you should run live immediately. Review the strategy first.
 
 ## Safe workflow
 
@@ -41,7 +53,7 @@ Connecting a wallet does not mean you should run live immediately. Review the st
 3. Run a simulation.
 4. Review the result and revise the strategy if needed.
 5. Read the [live-run checklist](/strategy-builder/validation).
-6. Connect a wallet.
+6. Sign in and add funds.
 7. Use **Run Live** only if you accept the risk.
 
 ## When not to run live
