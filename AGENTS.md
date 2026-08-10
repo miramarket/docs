@@ -8,8 +8,8 @@
 - Configuration lives in `docs.json`.
 - Run `mint dev` to preview locally.
 - Run `mint broken-links` to check links.
-- The docs focus on non-technical guidance for using the Miramarket website and strategy builder.
-- The audience includes external users who want to build and test strategies without writing code.
+- The docs focus on non-technical guidance for using the Miramarket website and strategy builder, plus setup guidance for the CLI and MCP server.
+- The audience includes external users who want to build and test strategies without writing code, and developers or agent operators setting up the CLI or MCP server.
 
 ## Terminology
 
@@ -39,10 +39,10 @@
 
 ## Content boundaries
 
-- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, glossary terms, and simulation/live behavior.
+- Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, glossary terms, simulation/live behavior, and CLI/MCP setup and usage.
 - Do not document Convex internals.
 - Do not document backend implementation details.
-- Do not document command line behavior yet. CLI documentation should say "Coming soon."
+- For the CLI and MCP server: document installation, authentication, account setup, and the everyday command/tool surface a user or agent needs. Do not reproduce the full internal flag-by-flag reference, exit-code tables, or test/CI documentation from the source repository's own READMEs — link out or summarize instead of copying wholesale.
 - Describe signing in and adding funds factually (sign in, then deposit by card, exchange transfer, or wallet transfer) without asserting a custodial or non-custodial claim, and note that it is separate from starting a live run.
 - Do not imply that execution or fills are guaranteed.
 - Do not document unrelated app, service, monitoring, deployment, or internal testing details.

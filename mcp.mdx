@@ -1,0 +1,75 @@
+---
+title: "MCP server"
+description: "Connect an MCP-native AI agent host, such as Claude Desktop, to Miramarket."
+---
+
+The Miramarket MCP server exposes strategy building, account information, and market data to any host that speaks the [Model Context Protocol](https://modelcontextprotocol.io) — Claude Desktop, claude.ai connectors, and similar tools that cannot run shell commands directly.
+
+If your agent host *can* run shell commands (for example, Claude Code or a CI job), use the [CLI](/cli) instead. It has a wider command surface and is more battle-tested; the MCP server exists specifically for hosts that have no shell access.
+
+## Sign in
+
+The MCP server reads the same signed-in session the CLI writes — there is no separate MCP login. Install the CLI and sign in once:
+
+```bash
+npm install -g @miramarket/cli
+miramarket-cli login
+miramarket-cli account setup
+```
+
+See [Sign in](/cli#sign-in) and [Finish account setup](/cli#finish-account-setup) on the CLI page for the full walkthrough, including the two steps (accepting policies, delegating your wallet) that only you can complete.
+
+Once you have approved the sign-in once, the MCP server stays authenticated indefinitely without asking again.
+
+## Install and configure
+
+Clone the repository and build the server:
+
+```bash
+git clone <repository-url>
+cd prediction_market
+npm install
+npm run build --workspace=@miramarket/mcp
+```
+
+Then point your MCP host at the compiled binary. For Claude Desktop, add this to its configuration file:
+
+```json
+{
+  "mcpServers": {
+    "miramarket": {
+      "command": "node",
+      "args": ["/absolute/path/to/prediction_market/services/miramarket-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+Restart your MCP host after saving the configuration.
+
+## What the agent can do
+
+Every tool returns a structured result your agent can read directly — a success object, or an error with a machine-readable code it can act on.
+
+| Category | Tools |
+| --- | --- |
+| Account | Check sign-in and trade-readiness, view deposit address, view balance and portfolio, withdraw funds |
+| Markets | List, search, and inspect Polymarket markets, including order books and price history |
+| Strategy authoring | Get the strategy format, validate, preview, and edit a strategy |
+| Natural language | Build or edit a strategy, or ask questions about one, in plain English |
+| Strategy management | List, inspect, watch, rename, cancel, exit, and delete your strategies |
+
+### What the agent cannot do
+
+A few things are deliberately left out of the MCP surface, on purpose:
+
+- **Signing in and accepting policies.** Both require you personally — an agent should surface the required action and wait for you to complete it, not attempt it on your own behalf.
+- **Raw order placement and cross-chain bridging.** Agent access to Miramarket is strategy-only; use strategy posting to trade instead of placing individual orders.
+
+### Building a strategy in plain English
+
+The most direct way for an agent to build you a strategy is to describe what you want in natural language — for example, "buy YES if this market crosses above 60%" — and let the agent's natural-language tool handle market resolution and strategy compilation. It will ask a clarifying question if your request is ambiguous, or ask you to pick between multiple matching markets if more than one fits your description.
+
+## Withdrawing funds
+
+Withdrawing to an external address spends real funds and has no simulation mode. The agent must ask for your explicit confirmation before calling the withdraw tool, and you should treat that confirmation the same way you would a real-money transaction anywhere else.

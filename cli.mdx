@@ -1,6 +1,106 @@
 ---
 title: "CLI"
-description: "Miramarket command line documentation is coming soon."
+description: "Install the Miramarket command line tool, sign in, and post your first strategy."
 ---
 
-Coming soon.
+The Miramarket CLI lets you author, validate, and post strategies from a terminal instead of the visual builder. It is built for scripting and for AI coding agents that can run shell commands, but works just as well for a human typing commands directly.
+
+If you want a visual canvas instead, use the [strategy builder](/quickstart).
+
+## Install
+
+```bash
+npm install -g @miramarket/cli
+```
+
+## Sign in
+
+```bash
+miramarket-cli login
+```
+
+This prints a short code and a verification link:
+
+```text
+Open this URL in your browser to log in
+https://app.miramarket.org/authorize?user_code=ABCD-1234  (code: ABCD-1234)
+Waiting for approval...
+```
+
+Open the link in any browser — it does not need to be on the same device you are running the CLI from, which is useful if you are working over SSH or on a server with no browser installed. Sign in with the usual Miramarket options (email, Google, Discord) and approve the request. The CLI then finishes authenticating automatically.
+
+Once you approve, the session stays signed in on that machine indefinitely — there is no need to log in again for routine use. If you ever want to check whether you are still signed in:
+
+```bash
+miramarket-cli auth status
+```
+
+## Finish account setup
+
+Signing in starts a session, but two more things are required before you can trade: accepting the current Terms, Privacy Policy, and Risk Disclosure, and delegating your wallet. Check what is still needed:
+
+```bash
+miramarket-cli account status
+```
+
+This reports exactly what is missing and how to fix it. Two steps require you personally, and cannot be done by a script or an AI agent on your behalf:
+
+- **Accept the current policies**, from an interactive terminal:
+
+  ```bash
+  miramarket-cli account accept-policies
+  ```
+
+- **Delegate your wallet**, by opening [app.miramarket.org](https://app.miramarket.org) and signing in once in a browser. `miramarket-cli account status` will confirm once this is done.
+
+Run `miramarket-cli account status` again afterward to confirm you are ready to trade.
+
+## Post your first strategy
+
+Use the guided wizard, which walks you through choosing a starting point, validating, previewing, and posting:
+
+```bash
+miramarket-cli init
+```
+
+Or work with a strategy file directly:
+
+```bash
+# See the strategy format
+miramarket-cli schema
+
+# Check a strategy file for errors
+miramarket-cli validate ./my-strategy.json
+
+# See a summary before posting
+miramarket-cli preview ./my-strategy.json
+
+# Post it — imports and starts a run
+miramarket-cli post ./my-strategy.json
+
+# Watch it until it finishes
+miramarket-cli strategies watch <strategyId>
+```
+
+Add `--demo` to `post` to simulate a run instead of using real funds.
+
+## Everyday commands
+
+| Command | What it does |
+| --- | --- |
+| `miramarket-cli balance` | Show your USDC balance and spendable cash. |
+| `miramarket-cli portfolio` | Show balances, open orders, and settled positions. |
+| `miramarket-cli markets search <query>` | Search Polymarket markets by keyword. |
+| `miramarket-cli strategies list` | List your strategies. |
+| `miramarket-cli strategies show <strategyId>` | Show details for one strategy. |
+| `miramarket-cli strategies exit <strategyId>` | Close out a completed strategy. |
+| `miramarket-cli account withdraw --recipient <address> --confirm` | Withdraw spendable funds to an address. |
+| `miramarket-cli logout` | Sign out on this machine. |
+
+Every command supports a `--json` flag for machine-readable output, which agents and scripts should always use. Run any command with `--help` to see its full set of options.
+
+## Using it with an AI agent
+
+The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then `miramarket-cli schema` to learn the strategy format, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
+
+If your agent host cannot run shell commands at all, use the [MCP server](/mcp) instead.
