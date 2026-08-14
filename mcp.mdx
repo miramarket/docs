@@ -23,23 +23,17 @@ Once you have approved the sign-in once, the MCP server stays authenticated inde
 
 ## Install and configure
 
-Clone the repository and build the server:
-
 ```bash
-git clone <repository-url>
-cd prediction_market
-npm install
-npm run build --workspace=@miramarket/mcp
+npm install -g @miramarket/mcp
 ```
 
-Then point your MCP host at the compiled binary. For Claude Desktop, add this to its configuration file:
+Then point your MCP host at the installed binary. For Claude Desktop, add this to its configuration file:
 
 ```json
 {
   "mcpServers": {
     "miramarket": {
-      "command": "node",
-      "args": ["/absolute/path/to/prediction_market/services/miramarket-mcp/dist/index.js"]
+      "command": "miramarket-mcp"
     }
   }
 }
