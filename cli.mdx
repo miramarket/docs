@@ -102,5 +102,3 @@ Every command supports a `--json` flag for machine-readable output, which agents
 ## Using it with an AI agent
 
 The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then `miramarket-cli schema` to learn the strategy format, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
-
-If your agent host cannot run shell commands at all, Miramarket does not currently have a supported integration path for it — the [MCP server](/mcp-server) is deprecated.
