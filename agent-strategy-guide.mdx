@@ -3,7 +3,7 @@ title: "Build Polymarket strategies with an AI agent"
 description: "How an AI agent creates, validates, and runs automated Polymarket trading strategies using the Miramarket CLI — the JSON format, and the rules a validator can't check for you."
 ---
 
-Miramarket lets you build a conditional trading strategy for Polymarket — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli), without a human describing it turn-by-turn through a chat interface.
+Miramarket lets you build a conditional trading strategy for Polymarket — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli.md), without a human describing it turn-by-turn through a chat interface.
 
 An agent capable of understanding a request like *"buy YES if this market crosses above 60%, take half profit at 75% and let the rest ride to 90%"* can construct the strategy JSON for that directly from the format and rules below — there's no separate natural-language API to call first. The one thing worth knowing up front: **most of the mistakes below are not caught by `validate`.** `validate` only checks that the JSON is structurally well-formed — it has no notion of your intent, so a strategy can validate cleanly, post cleanly, and still silently do the wrong thing (most often: deploy $0 into a leg, or set up a condition that can never fire as intended). The rules in this guide exist specifically to prevent that.
 
@@ -18,7 +18,7 @@ npm install -g @miramarket/cli
 miramarket-cli account status --json
 ```
 
-Read `.ready` and `.blockers[]`. Two things in a blocker's `requiredAction` — signing in, and accepting the Terms/Privacy/Risk Disclosure — require a human in an interactive terminal or browser. An agent should surface those and stop, never attempt them. See [CLI](/cli#sign-in) for the full sign-in walkthrough, and the [CLI reference](/cli-reference) for every command.
+Read `.ready` and `.blockers[]`. Two things in a blocker's `requiredAction` — signing in, and accepting the Terms/Privacy/Risk Disclosure — require a human in an interactive terminal or browser. An agent should surface those and stop, never attempt them. See [/cli.md](/cli.md) for the full sign-in walkthrough, and [/cli-reference.md](/cli-reference.md) for every command.
 
 ## The strategy format
 

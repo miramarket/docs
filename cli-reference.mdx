@@ -3,7 +3,7 @@ title: "CLI reference"
 description: "Every @miramarket/cli command, its flags, JSON output, and exit codes."
 ---
 
-Full reference for every `miramarket-cli` command. For installation and a first walkthrough, see [CLI](/cli). For the strategy JSON format and correctness rules, see [Build strategies with an AI agent](/agent-strategy-guide).
+Full reference for every `miramarket-cli` command. For installation and a first walkthrough, see [CLI](/cli). For the strategy JSON format and correctness rules, see [/agent-strategy-guide.md](/agent-strategy-guide.md).
 
 Every command supports `--json` for machine-readable output. In `--json` mode, stdout carries exactly one JSON object and nothing else — no banners, color, or spinner frames — except `strategies watch --events`, noted below. Piping to a non-TTY also disables color and spinners automatically.
 
@@ -134,7 +134,7 @@ Exit codes: `0` ok, `3` auth error, `4` server error (a failed transfer releases
 
 ## Strategy authoring commands
 
-See [Build strategies with an AI agent](/agent-strategy-guide) for the JSON format itself and the rules for building a strategy that behaves correctly, not just one that passes `validate`.
+See [/agent-strategy-guide.md](/agent-strategy-guide.md) for the JSON format itself and the rules for building a strategy that behaves correctly, not just one that passes `validate`.
 
 ### `miramarket-cli schema [--format=ts|json|markdown]`
 

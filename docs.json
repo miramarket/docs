@@ -58,12 +58,6 @@
             ]
           },
           {
-            "group": "AI agents",
-            "pages": [
-              "agent-strategy-guide"
-            ]
-          },
-          {
             "group": "Reference",
             "pages": [
               "cli-reference"
@@ -80,8 +74,8 @@
           "icon": "rocket"
         },
         {
-          "anchor": "Build strategies with an AI agent",
-          "href": "/agent-strategy-guide",
+          "anchor": "Agent strategy guide (markdown)",
+          "href": "/agent-strategy-guide.md",
           "icon": "robot"
         },
         {
