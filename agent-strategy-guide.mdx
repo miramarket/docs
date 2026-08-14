@@ -1,0 +1,356 @@
+---
+title: "Build Polymarket strategies with an AI agent"
+description: "How an AI agent creates, validates, and runs automated Polymarket trading strategies using the Miramarket CLI — the JSON format, and the rules a validator can't check for you."
+---
+
+Miramarket lets you build a conditional trading strategy for Polymarket — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli), without a human describing it turn-by-turn through a chat interface.
+
+An agent capable of understanding a request like *"buy YES if this market crosses above 60%, take half profit at 75% and let the rest ride to 90%"* can construct the strategy JSON for that directly from the format and rules below — there's no separate natural-language API to call first. The one thing worth knowing up front: **most of the mistakes below are not caught by `validate`.** `validate` only checks that the JSON is structurally well-formed — it has no notion of your intent, so a strategy can validate cleanly, post cleanly, and still silently do the wrong thing (most often: deploy $0 into a leg, or set up a condition that can never fire as intended). The rules in this guide exist specifically to prevent that.
+
+Prediction markets involve risk. Posting a strategy with `--demo` simulates it with no real funds; posting live spends real capital. Miramarket is not financial, investment, legal, or tax advice.
+
+## Before you start
+
+Install the CLI and confirm the account can actually trade — a signed-in session alone isn't enough (it also needs accepted policies and a delegated wallet):
+
+```bash
+npm install -g @miramarket/cli
+miramarket-cli account status --json
+```
+
+Read `.ready` and `.blockers[]`. Two things in a blocker's `requiredAction` — signing in, and accepting the Terms/Privacy/Risk Disclosure — require a human in an interactive terminal or browser. An agent should surface those and stop, never attempt them. See [CLI](/cli#sign-in) for the full sign-in walkthrough, and the [CLI reference](/cli-reference) for every command.
+
+## The strategy format
+
+A strategy is JSON with this shape:
+
+```ts
+interface ConditionalActionStrategy {
+  version: string;                    // semver, e.g. "1.1.0"
+  strategy_id: string;                // unique identifier
+  initial_principal_usd: number;      // > 0
+  root_node_id: string;               // node with no incoming edge
+  nodes: StrategyNode[];
+  edges: StrategyEdge[];              // ACTION -> CONDITION only
+  decision_groups: StrategyDecisionGroup[];
+  is_demo?: boolean;                  // simulated fills, no real trades
+}
+```
+
+Get the exact types any time with `miramarket-cli schema --format=ts` (or `--format=json` for a JSON Schema document, `--format=markdown` for a shorter prose version of this page).
+
+**Nodes** are either a `CONDITION` (a rule to wait for) or an `ACTION` (something to do), each at a `level` — the root is level 0, and every edge increases level by exactly 1.
+
+A **CONDITION** node watches a market and fires when a signal crosses a threshold:
+
+```ts
+{
+  watch: { venue: "POLYMARKET", market_id: string, outcome_token: "YES" | "NO", token_id?: string };
+  signal: "IMPLIED_PROBABILITY" | "ROI_PCT" | "PNL_USD" | "TIME_SINCE_GROUP_SECONDS" | "TIME_TO_RESOLUTION_SECONDS";
+  trigger: "CROSS_ABOVE" | "CROSS_BELOW";
+  threshold: number;
+}
+```
+
+An **ACTION** node does something with capital:
+
+```ts
+{
+  action_type: "BUY_MARKET_OUTCOME" | "SELL_MARKET_OUTCOME" | "HOLD" | "MOVE_TO_WALLET";
+  allocation_pct?: number;   // required when the decision group is SPLIT_100
+  target: { venue?: "POLYMARKET", market?: { market_id: string, outcome_token: string, token_id: string } };
+}
+```
+
+An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITION` only). A **decision group** links one CONDITION to the one or more ACTIONs it fires — `SINGLE` mode for exactly one action, `SPLIT_100` mode for multiple actions whose `allocation_pct` values sum to 100.
+
+### What `validate` checks — and what it doesn't
+
+`miramarket-cli validate ./strategy.json --json` catches structural problems fast: missing required fields, duplicate IDs, `allocation_pct` sums that aren't exactly 100, edges that don't go `ACTION -> CONDITION`, cycles, and unreachable nodes. It has **no idea what you meant** — it cannot tell you that a condition will never fire, or that an action will be funded with $0. The rules below cover exactly that gap.
+
+## Rules for a strategy that actually behaves as intended
+
+**1. Capital only threads through a `HOLD` action, never a `BUY`.** A `BUY`'s own outgoing edge forwards $0 to whatever it points at, unless the immediate next step is a `SELL` — a `BUY` converts cash into a position, so there's nothing left to hand forward. A `HOLD` passes its capital through unchanged. So: every non-final tier of a ladder — whether you're scaling *into* a position or taking profit in stages on the way *out* — must compile as a paired `SPLIT_100` decision: `[BUY-or-MOVE_TO_WALLET this tier's share, HOLD the remainder]`, with the next tier's condition chained off the `HOLD`, never off the sibling that traded. Also: `allocation_pct` is always a share of the capital that actually reaches that node (what the parent passed down), never a share of `initial_principal_usd` directly. If a later tier should represent "45% of the original principal" and an earlier tier already took 30%, that tier's `allocation_pct` is `45 / (100 - 30) * 100 ≈ 64.3`, not `45`.
+
+**2. Never author `signal: "ROI_PCT"` or `"PNL_USD"`.** Every condition is evaluated as a raw absolute value at runtime — there is no way to anchor a threshold to a fill price at the condition-authoring layer. Convert an ROI or PnL target to an absolute price *before* authoring: `entry_price * (1 + roi_pct / 100)`, clamped to `[0.01, 0.99]`, using `IMPLIED_PROBABILITY` as the signal. Use the entry's own trigger threshold as `entry_price` when the entry is itself gated by a price crossing on the same market and side; otherwise use the market's current price.
+
+**3. Side and leg selection.** The side (`YES`/`NO`) for a given market reference comes from what was actually stated for *that* reference — never assume one direction applies across every market in a multi-leg strategy. The leg (which specific market, when an event has several — e.g. "above $120k" vs. "above $130k") must match what was actually asked for; don't substitute a similarly-numbered leg in the opposite direction just because it's close. A useful sanity check: an entry priced below 3¢ or above 97¢ almost always means the wrong leg or side was picked, not a genuinely extreme trade.
+
+**4. `CROSS_ABOVE`/`CROSS_BELOW` fires the instant it's already true.** There's no "must actually observe a transition" semantics — if the market is already past your threshold when the strategy activates, the condition fires immediately, which is indistinguishable from an unconditional buy. A threshold only a cent or two from the current price has the same practical effect. Unless a literal number was requested, use a floor of `anchor + (1 - anchor) / 2` for `CROSS_ABOVE` or `anchor / 2` for `CROSS_BELOW` (anchor = current price for a fresh entry, or the entry's own threshold for a chained exit on the same market).
+
+**5. Chained same-direction thresholds on one market must be monotone.** A later `CROSS_ABOVE` stage needs a strictly higher threshold than every earlier `CROSS_ABOVE` stage watching the same market (mirror the logic for `CROSS_BELOW`) — the chain only reaches the later stage after the earlier one already fired, so a non-monotone threshold can never trigger.
+
+**6. Sibling conditions are winner-takes-all, not "try all of these."** The first sibling condition in a decision group to fire executes; every other sibling is skipped. A multi-tier take-profit ladder expressed as parallel siblings only ever delivers its first tier — it has to be `HOLD`-chained instead, per rule 1.
+
+**7. `SELL` closes an existing position; it never opens one.** A market can only be `SELL`'d if an earlier action in the same strategy already `BUY`'d it. For every take-profit, stop-loss, or exit, use `MOVE_TO_WALLET` (with an empty `target: {}`) — `SELL` is only for redeploying an existing position's proceeds into a *different* market within the same strategy.
+
+**8. Only the root may be unconditional.** A non-root node with no gating condition doesn't compile to a fundable step — an `ACTION` can't hand capital directly to another `ACTION` (see rule 1).
+
+**9. A sole exit must take 100%.** If a `MOVE_TO_WALLET`/`SELL` is the only way out of a position, its `allocation_pct` must be 100 — a partial sole exit leaves the rest with no exit ever registered for it. A partial exit is fine when *another* exit reaches the same position too — a properly `HOLD`-chained take-profit ladder, for example.
+
+**10. Watch unit scale.** ROI-flavored percentages are whole numbers (`18` means +18%, not `0.18`). Probability thresholds (`IMPLIED_PROBABILITY`) are `0`–`1`. A value like `0.18` on a field that expects a whole-number percent is almost always a scale mistake.
+
+**11. Polymarket's CLOB has a $1 minimum per order.** Any leaf allocation that resolves to less than $1 of the strategy's principal is rejected when you post — `validate` won't catch this, since it depends on `initial_principal_usd` and the full allocation chain.
+
+**12. Structural limits.** Up to 24 stages, up to 4 actions per decision group, a practical ceiling of 4 distinct markets per strategy, and a 500 KB / 500-node cap at posting time.
+
+**13. A "gated entry, then a genuine partial exit" has no shortcut — hand-chain it.** There's no single field for "enter when X, then take partial profit at Y, leaving the rest running." Build it explicitly as `[MOVE_TO_WALLET x%, HOLD (100-x)%]` pairs, per rule 1, chained off the entry's own condition.
+
+## Worked examples
+
+### Minimal: buy when a market crosses a threshold
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "eth-buy-v1",
+  "initial_principal_usd": 50,
+  "root_node_id": "cond_1",
+  "nodes": [
+    {
+      "node_id": "cond_1",
+      "type": "CONDITION",
+      "level": 0,
+      "condition": {
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES" },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.6
+      }
+    },
+    {
+      "node_id": "act_1",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": { "market_id": "<market-id>", "outcome_token": "YES", "token_id": "<token-id>" }
+        }
+      }
+    }
+  ],
+  "edges": [],
+  "decision_groups": [
+    { "group_id": "g1", "condition_node_id": "cond_1", "action_node_ids": ["act_1"], "level": 0, "mode": "SINGLE" }
+  ]
+}
+```
+
+### Entry, then a single take-profit at an absolute price (rules 1, 2, 7)
+
+Enter unconditionally, exit at an absolute price computed from the ROI target — not `ROI_PCT`. Entering near 50¢, +20% ROI converts to an exit threshold of ~60¢.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "roi-tp-v1",
+  "initial_principal_usd": 100,
+  "root_node_id": "act_entry",
+  "nodes": [
+    {
+      "node_id": "act_entry",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": { "market_id": "<market-id>", "outcome_token": "YES", "token_id": "<token-id>" }
+        }
+      }
+    },
+    {
+      "node_id": "cond_tp",
+      "type": "CONDITION",
+      "level": 1,
+      "condition": {
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES" },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.6
+      }
+    },
+    {
+      "node_id": "act_sell",
+      "type": "ACTION",
+      "level": 1,
+      "action": { "action_type": "MOVE_TO_WALLET", "allocation_pct": 100, "target": {} }
+    }
+  ],
+  "edges": [
+    { "edge_id": "e1", "from_node_id": "act_entry", "to_node_id": "cond_tp" }
+  ],
+  "decision_groups": [
+    { "group_id": "g1", "condition_node_id": "cond_tp", "action_node_ids": ["act_sell"], "level": 1, "mode": "SINGLE" }
+  ]
+}
+```
+
+### Two-tier take-profit ladder, HOLD-chained (rules 1, 5, 6, 9)
+
+Entry (100%) → at 65¢, sell half and hold the rest → at 80¢ (higher, so the chain is monotone), sell what's left. The second condition is chained off the `HOLD`, never off the `SELL` — chaining off the `SELL` would forward $0. The 65¢-tier pair is a `SPLIT_100` group, not two independent siblings each claiming 100%. The final sell is 100% because it's the sole remaining exit.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "two-tier-ladder-v1",
+  "initial_principal_usd": 100,
+  "root_node_id": "act_entry",
+  "nodes": [
+    {
+      "node_id": "act_entry",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "POLYMARKET",
+          "market": { "market_id": "<market-id>", "outcome_token": "YES", "token_id": "<token-id>" }
+        }
+      }
+    },
+    {
+      "node_id": "cond_tp1",
+      "type": "CONDITION",
+      "level": 1,
+      "condition": {
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES" },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.65
+      }
+    },
+    {
+      "node_id": "act_tp1_sell",
+      "type": "ACTION",
+      "level": 1,
+      "action": { "action_type": "MOVE_TO_WALLET", "allocation_pct": 50, "target": {} }
+    },
+    {
+      "node_id": "act_tp1_hold",
+      "type": "ACTION",
+      "level": 1,
+      "action": { "action_type": "HOLD", "allocation_pct": 50, "target": {} }
+    },
+    {
+      "node_id": "cond_tp2",
+      "type": "CONDITION",
+      "level": 2,
+      "condition": {
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES" },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.80
+      }
+    },
+    {
+      "node_id": "act_tp2_sell",
+      "type": "ACTION",
+      "level": 2,
+      "action": { "action_type": "MOVE_TO_WALLET", "allocation_pct": 100, "target": {} }
+    }
+  ],
+  "edges": [
+    { "edge_id": "e1", "from_node_id": "act_entry", "to_node_id": "cond_tp1" },
+    { "edge_id": "e2", "from_node_id": "act_tp1_hold", "to_node_id": "cond_tp2" }
+  ],
+  "decision_groups": [
+    { "group_id": "g1", "condition_node_id": "cond_tp1", "action_node_ids": ["act_tp1_sell", "act_tp1_hold"], "level": 1, "mode": "SPLIT_100" },
+    { "group_id": "g2", "condition_node_id": "cond_tp2", "action_node_ids": ["act_tp2_sell"], "level": 2, "mode": "SINGLE" }
+  ]
+}
+```
+
+### Split entry across two markets from one condition
+
+Both actions fire together when the shared condition fires — this is one decision splitting capital across two legs, not a chain, so no `HOLD` is needed.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "split-buy-v1",
+  "initial_principal_usd": 100,
+  "root_node_id": "cond_1",
+  "nodes": [
+    {
+      "node_id": "cond_1",
+      "type": "CONDITION",
+      "level": 0,
+      "condition": {
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id-A>", "outcome_token": "YES" },
+        "signal": "IMPLIED_PROBABILITY",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 0.55
+      }
+    },
+    {
+      "node_id": "act_a",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 60,
+        "target": { "venue": "POLYMARKET", "market": { "market_id": "<market-id-A>", "outcome_token": "YES", "token_id": "<token-id-A>" } }
+      }
+    },
+    {
+      "node_id": "act_b",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 40,
+        "target": { "venue": "POLYMARKET", "market": { "market_id": "<market-id-B>", "outcome_token": "YES", "token_id": "<token-id-B>" } }
+      }
+    }
+  ],
+  "edges": [],
+  "decision_groups": [
+    { "group_id": "g1", "condition_node_id": "cond_1", "action_node_ids": ["act_a", "act_b"], "level": 0, "mode": "SPLIT_100" }
+  ]
+}
+```
+
+## The recommended loop
+
+```bash
+# 1. Confirm the account can trade
+miramarket-cli account status --json
+
+# 2. Get the exact types
+miramarket-cli schema --format=ts
+
+# 3. Author the strategy JSON, applying the rules above
+
+# 4. Validate — structural errors only, see "what validate checks" above
+miramarket-cli validate ./strategy.json --json
+
+# 5. Preview — no server contact, surfaces fields dropped at import
+miramarket-cli preview ./strategy.json --json
+
+# 6. Post as a demo first if at all unsure, then watch it
+miramarket-cli post ./strategy.json --demo --json
+miramarket-cli strategies watch <strategyId> --json
+
+# 7. Post live when ready
+miramarket-cli post ./strategy.json --json
+```
+
+## What an agent should never do
+
+- **Sign in, or accept the Terms/Privacy Policy/Risk Disclosure.** Both require a human, in a browser or an interactive terminal respectively. Surface the required action and stop.
+- **Place raw orders or bridge funds as a substitute for strategy posting.** Trading through Miramarket is meant to go through strategy posting, which carries the account's full risk controls; `trade` and `bridge` exist for direct human/scripted use, not as agent primitives.
+- **Withdraw funds without explicit, fresh confirmation.** Withdrawal spends real money with no simulation mode — treat a request to withdraw the same way you'd treat any other irreversible real-money action.
+
+## Common pitfalls
+
+- **Treating `auth status` or `account status` exit `0` as "ready."** Both always exit `0` — read `authenticated` / `ready` in the payload.
+- **Not re-validating after editing.** `edit` always exits `0` even when the result fails validation — check `valid` and `errors` in its envelope.
+- **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; any `ROI_PCT`/`PNL_USD` signal is also flagged there.
+- **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — Polymarket is the only tradeable venue right now.
+- **Hand-rolling a polling loop for a run's status.** Use `strategies watch`, which has terminal-status detection and a timeout built in.

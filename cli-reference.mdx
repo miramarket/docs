@@ -1,0 +1,314 @@
+---
+title: "CLI reference"
+description: "Every @miramarket/cli command, its flags, JSON output, and exit codes."
+---
+
+Full reference for every `miramarket-cli` command. For installation and a first walkthrough, see [CLI](/cli). For the strategy JSON format and correctness rules, see [Build strategies with an AI agent](/agent-strategy-guide).
+
+Every command supports `--json` for machine-readable output. In `--json` mode, stdout carries exactly one JSON object and nothing else — no banners, color, or spinner frames — except `strategies watch --events`, noted below. Piping to a non-TTY also disables color and spinners automatically.
+
+## Envelope and exit codes
+
+Every command that supports `--json` emits the same envelope shape on both success and failure:
+
+```json
+{
+  "ok": true,
+  "command": "account status",
+  "...": "command-specific fields"
+}
+```
+
+On failure, `ok` is `false` and the envelope also carries a human-readable `error` and a machine-readable `code`:
+
+```json
+{
+  "ok": false,
+  "command": "post",
+  "error": "Not authenticated. Run `miramarket-cli login` first.",
+  "code": "NOT_AUTHENTICATED"
+}
+```
+
+Prefer branching on `code` over parsing `error` text — `error` wording can change, `code` is the stable contract.
+
+| Exit code | Meaning |
+| --- | --- |
+| 0 | Success |
+| 1 | Generic / unexpected failure |
+| 2 | Validation failure |
+| 3 | Authentication failure (not signed in, expired token) |
+| 4 | Server failure (upstream error, geo-restricted, timeout) |
+| 5 | Bad input (missing file, malformed JSON, missing/invalid flags) |
+
+`code` values include `NOT_AUTHENTICATED`, `VALIDATION_ERROR`, `INPUT_ERROR`, `SERVER_ERROR`, `PARSE_ERROR`, `STRATEGY_NOT_FOUND`, `REGION_RESTRICTED`, `WALLET_NOT_DELEGATED`, `WATCH_TIMEOUT`, and more — this set grows over time, so don't treat it as closed.
+
+## Sign-in commands
+
+### `miramarket-cli login [--force]`
+
+Authenticates via an OAuth device flow: prints a short code and a verification link, you approve it in any browser (doesn't need to be the same device — useful over SSH or on a headless machine), and the CLI finishes automatically once approved. A valid cached session short-circuits this by default; pass `--force` to sign in again (for example, to switch accounts).
+
+Signing in starts a session but does not by itself make the account trade-ready — see `account setup` under [Account commands](#account-commands) below.
+
+### `miramarket-cli logout`
+
+Clears the cached session on this machine.
+
+### `miramarket-cli auth status [--json]`
+
+Reports whether a valid session is cached. Always exits `0` — this is a diagnostic, read the payload:
+
+```json
+{
+  "ok": true,
+  "command": "auth status",
+  "authenticated": true,
+  "postingAllowed": true,
+  "did": "did:privy:...",
+  "expiresAt": "2026-05-09T12:00:00.000Z"
+}
+```
+
+## Account commands
+
+A signed-in session is not the same as a trade-ready account — Polymarket orders and live strategy runs also require accepting the platform's Terms/Privacy/Risk Disclosure and having a delegated deposit wallet with the necessary on-chain approvals.
+
+### `miramarket-cli account status [--json]`
+
+Diagnoses trade-readiness across auth, API reachability, region availability, policy acceptance, wallet delegation, and capital. Always exits `0` — `ok:true` means "the check ran," not "everything passed." Read `ready` and `blockers[]`:
+
+```json
+{
+  "ok": true,
+  "command": "account status",
+  "ready": false,
+  "blockers": [
+    {
+      "code": "POLICIES_NOT_ACCEPTED",
+      "message": "You have not accepted the current Terms, Privacy Policy, and Risk Disclosure.",
+      "requiredAction": "A human must run `miramarket-cli account accept-policies` in an interactive terminal.",
+      "humanRequired": true
+    }
+  ],
+  "checks": {
+    "auth": { "ok": true, "did": "did:privy:...", "expiresAt": "..." },
+    "api": { "ok": true },
+    "geo": { "ok": true, "country": "GB" },
+    "policies": { "ok": false, "accepted": false },
+    "wallet": { "ok": true, "delegated": true, "depositWalletAddress": "0x..." },
+    "capital": { "ok": true, "cashAtomic": 50000000 }
+  }
+}
+```
+
+If `humanRequired` is `true` on a blocker (not authenticated, wallet not delegated, policies not accepted, region-restricted), surface `requiredAction` and stop — an agent should never attempt to work around these.
+
+Blocker codes: `NOT_AUTHENTICATED`, `API_UNREACHABLE`, `REGION_RESTRICTED`, `POLICIES_NOT_ACCEPTED`, `WALLET_NOT_DELEGATED`, `WALLET_CHECK_FAILED`.
+
+### `miramarket-cli account setup [--json]`
+
+Idempotent — attaches the wallet-level policy and bootstraps the deposit wallet's on-chain approvals; safe to re-run any time. **Cannot complete onboarding by itself**: wallet delegation only happens in a browser during sign-in, and this command never accepts policies on your behalf. It reports exactly what's still needed and points at `account accept-policies` or a browser sign-in.
+
+### `miramarket-cli account policies [--json]`
+
+Read-only. Shows the current Terms/Privacy/Risk Disclosure versions, your acceptance status, and canonical URLs.
+
+### `miramarket-cli account accept-policies`
+
+Records legal acceptance of the current Terms, Privacy Policy, and Risk Disclosure. This is a human-only action — it requires typing `I accept` in an interactive terminal (or, for a human scripting their own machine, pinning the exact current document versions with `--i-have-read-and-accept --terms-version=... --privacy-version=... --risk-version=...`). An AI agent should never call this on a user's behalf.
+
+### `miramarket-cli account capital [--json]`
+
+Shows capital currently locked by active strategy runs and pending withdrawal holds — the gap between gross wallet balance and what's actually spendable.
+
+### `miramarket-cli account withdraw --recipient <address> [--amount <usd>] --confirm [--json]`
+
+Withdraws spendable USDC to an external address. Omit `--amount` to withdraw all spendable cash. Requesting more than spendable cash is rejected before anything is moved.
+
+```bash
+miramarket-cli account withdraw --recipient 0xabc... --amount 25 --confirm --json
+```
+
+Exit codes: `0` ok, `3` auth error, `4` server error (a failed transfer releases its hold automatically), `5` bad input.
+
+## Strategy authoring commands
+
+See [Build strategies with an AI agent](/agent-strategy-guide) for the JSON format itself and the rules for building a strategy that behaves correctly, not just one that passes `validate`.
+
+### `miramarket-cli schema [--format=ts|json|markdown]`
+
+Prints the strategy schema — `ts` for TypeScript types, `json` for a JSON Schema document, `markdown` for a prose authoring guide with worked examples.
+
+### `miramarket-cli validate <file> [--json]`
+
+Validates a strategy JSON file's structure. Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
+
+```json
+{
+  "ok": true,
+  "command": "validate",
+  "strategyPath": "./my-strategy.json",
+  "valid": true,
+  "errors": [],
+  "warnings": []
+}
+```
+
+### `miramarket-cli preview <file> [--json]`
+
+Summarizes a strategy without contacting the server — node/edge counts, required principal, and `warnings[]` for anything that will be silently dropped or misbehave at import.
+
+### `miramarket-cli edit <file> [flags]`
+
+Updates fields in a strategy JSON in place. Edits apply in memory and the result is fully re-validated before writing — if validation fails, the source file is left untouched and the output reports the errors.
+
+| Flag | Description |
+| --- | --- |
+| `--set <path>=<value>` | Set a field (repeatable). Value is parsed as JSON, falling back to string. |
+| `--unset <path>` | Remove a field (repeatable). |
+| `--out <path>` | Write to a different output file. |
+| `--demo` / `--no-demo` | Write or remove `is_demo: true`. |
+
+```bash
+miramarket-cli edit ./strategy.json --set initial_principal_usd=100
+miramarket-cli edit ./strategy.json --set "nodes[0].condition.threshold=0.7"
+miramarket-cli edit ./strategy.json --unset nodes[1].action.risk_guards
+```
+
+### `miramarket-cli post <file> [flags]`
+
+Validates and posts a strategy, then starts a run (unless `--no-start`). A live (non-demo) post runs a Polymarket market-health check first; demo posts skip it.
+
+| Flag | Description |
+| --- | --- |
+| `--no-start` | Import only, don't start a run. |
+| `--name <name>` | Override the strategy name (defaults to its `strategy_id`). |
+| `--demo` | Post as a simulation — no real orders placed. |
+| `--skip-health-check` | Demo runs only; rejected outright on a live strategy. |
+
+```json
+{
+  "ok": true,
+  "command": "post",
+  "posted": true,
+  "started": true,
+  "strategyId": "k97abc123...",
+  "runId": "k97xyz456...",
+  "name": "eth-momentum-v1",
+  "demo": false
+}
+```
+
+Exit codes: `0` ok, `2` validation error, `3` auth error, `4` server error, `5` bad input.
+
+## Market data commands
+
+None of these require authentication.
+
+| Command | What it does |
+| --- | --- |
+| `markets list [--limit <n>] [--offset <n>]` | Lists Polymarket events by id, title, volume. |
+| `markets search <query> [--limit <n>]` | Searches events by keyword, sorted by relevance. |
+| `markets show <eventId>` | Full event detail: description, end date, volume, liquidity, and each sub-market's outcome prices and CLOB token IDs. |
+| `markets orderbook <tokenId> [--depth <n>]` | Live top bids/asks for a CLOB token. |
+| `markets prices-history <market> [--interval <interval>]` | Price history; `--interval` is one of `1h`, `6h`, `1d`, `1w`, `1m`, `max`. |
+
+```json
+{
+  "ok": true,
+  "command": "markets show",
+  "id": "abc123",
+  "title": "Will X happen?",
+  "markets": [
+    { "id": "...", "question": "...", "outcomePrices": ["0.62", "0.38"], "clobTokenIds": ["...", "..."] }
+  ]
+}
+```
+
+## Trading and portfolio commands
+
+### `miramarket-cli trade [flags]`
+
+Places a CLOB limit order directly — for manual/tactical orders, not strategy automation (use `post` under [Strategy authoring commands](#strategy-authoring-commands) for that). Requires authentication and `--confirm`.
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--token-id` | yes | CLOB token ID for the outcome you're trading. |
+| `--side` | yes | `buy` or `sell`. |
+| `--price` | yes | Limit price between 0 and 1 (e.g. `0.55` = 55¢). |
+| `--size` | yes | Order size in USDC. |
+| `--order-type` | no | `FOK` (fill-or-kill, default) or `GTC` (rests on the book). |
+| `--confirm` | yes | Required safety flag. |
+
+```bash
+miramarket-cli trade --token-id 2174263... --side buy --price 0.55 --size 10 --confirm --json
+```
+
+Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
+
+| Command | What it does |
+| --- | --- |
+| `order status [orderId]` | Status of one order, or all open orders if omitted. |
+| `order cancel <orderId> --confirm` | Cancels an open GTC order. |
+| `balance [--chain base\|polygon\|all]` | USDC balance per chain, plus `cash` (gross minus locked/pending). |
+| `portfolio` | Balances, open orders, settled positions, capital reservations. |
+
+## Strategy management commands
+
+| Command | What it does |
+| --- | --- |
+| `strategies list` | Every strategy you own, with status and latest run info. |
+| `strategies show <strategyId> [--verbose]` | Detail for one strategy; `--verbose` adds per-node PnL, executed trades, and settlement detail. |
+| `strategies runs <strategyId> [--limit <n>]` | Run history, most recent first. |
+| `strategies watch <strategyId> [flags]` | Polls until the run reaches a terminal status — see below. |
+| `strategies rename <strategyId> <name>` | Rename (1–120 characters). |
+| `strategies cancel <runId>` | Cancel an active run. |
+| `strategies exit <strategyId>` | Close a **completed** strategy, freeing its locked principal. |
+| `strategies delete <strategyId> --confirm` | Permanently delete a **draft** strategy (never started). |
+
+### `strategies watch <strategyId> [flags]`
+
+| Flag | Description |
+| --- | --- |
+| `--json` | Blocks, emits exactly one final envelope on completion. |
+| `--events` | Emits one NDJSON line per status transition, then a final line — the one exception to "one JSON object per command." |
+| `--run <runId>` | Watch a specific run instead of the strategy's latest. |
+| `--until <statuses>` | Comma-separated terminal statuses to stop at (default `completed,failed,canceled`). |
+| `--timeout <seconds>` | Give up after this long (default 86400); exits `4` with `WATCH_TIMEOUT`. |
+| `--interval <seconds>` | Poll interval (default 5). |
+| `--fail-on-error` | Exit `4` if the run itself ends `failed`/`canceled` (default: the watch succeeding is exit `0` regardless of run outcome). |
+
+```bash
+miramarket-cli strategies watch <strategyId> --events --timeout 600
+```
+
+## Bridging commands
+
+Move USDC between Base and Polygon, or swap Polygon USDC to USDC.e, before trading. All require authentication (the wallet address is resolved from your session).
+
+| Command | Description |
+| --- | --- |
+| `bridge quote --amount <usd> --direction <direction>` | Get a quote. Returns `requestId`, `expectedInputAmount`, `expectedOutputAmount`. |
+| `bridge execute --amount <usd> --direction <direction> --confirm [--no-wait]` | Execute the transfer. |
+| `bridge status <requestId>` | Poll transfer status (no auth required). |
+
+`--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`.
+
+## `miramarket-cli status`
+
+Shows local CLI state: auth, last strategy worked on, last post result, remaining required actions.
+
+## Environment variables
+
+| Variable | Effect |
+| --- | --- |
+| `NO_COLOR` | Disables ANSI color (follows [no-color.org](https://no-color.org)). |
+| `MIRAMARKET_API_URL` | Override the API base URL (default `https://api.miramarket.org`). |
+| `MIRAMARKET_CONVEX_URL` | Override the Convex deployment URL. |
+| `MIRAMARKET_WEB_URL` | Override the strategy-builder web app URL used by `login`'s browser step (default `https://app.miramarket.org`). |
+| `MIRAMARKET_CONFIG_DIR` | Override where the cached session and local state live (default `~/.config/miramarket-cli`). |
+
+## Session lifetime
+
+The cached access token lasts 15 minutes, but the CLI also caches a 30-day refresh token (rotated on every use) and silently redeems it at the start of every command — there's no re-login to babysit, on a laptop or an unattended server alike. If the refresh token itself expires or is revoked, the next command reports `NOT_AUTHENTICATED` and you run `miramarket-cli login` again.
