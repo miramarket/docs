@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Miramarket Docs",
   "colors": {
-    "primary": "#3100FF",
-    "light": "#4B22FF",
-    "dark": "#2100B8"
+    "primary": "#A26D33",
+    "light": "#E6BC8B",
+    "dark": "#805127"
   },
   "favicon": "/favicon.png",
   "navigation": {
@@ -92,8 +92,8 @@
     }
   },
   "logo": {
-    "light": "/logo/miramarket-icon.png",
-    "dark": "/logo/miramarket-icon.png"
+    "light": "/logo/miramarket-icon-light.png",
+    "dark": "/logo/miramarket-icon-dark.png"
   },
   "navbar": {
     "links": [],
