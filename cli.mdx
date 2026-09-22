@@ -93,6 +93,8 @@ Add `--demo` to `post` to simulate a run instead of using real funds.
 | `miramarket-cli markets search <query>` | Search Polymarket markets by keyword. |
 | `miramarket-cli strategies list` | List your strategies. |
 | `miramarket-cli strategies show <strategyId>` | Show details for one strategy. |
+| `miramarket-cli strategies pull <strategyId> --out ./strategy.json` | Download a running strategy as JSON, with the nodes you may still change. |
+| `miramarket-cli strategies update <strategyId> ./strategy.json` | Save your changes to the future part of a running strategy. |
 | `miramarket-cli strategies exit <strategyId>` | Close out a completed strategy. |
 | `miramarket-cli account withdraw --recipient <address> --confirm` | Withdraw spendable funds to an address. |
 | `miramarket-cli logout` | Sign out on this machine. |

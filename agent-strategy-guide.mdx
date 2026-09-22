@@ -341,6 +341,30 @@ miramarket-cli strategies watch <strategyId> --json
 miramarket-cli post ./strategy.json --json
 ```
 
+## Changing a strategy that is already running
+
+`edit` only changes a local file. To change a strategy you have already posted, round-trip it:
+
+```bash
+# 1. Pull the posted graph and the lock lists
+miramarket-cli strategies pull <strategyId> --out ./strategy.json --json
+
+# 2. Change only nodes in editableNodeKeys, or add branches below them,
+#    then push the file back
+miramarket-cli strategies update <strategyId> ./strategy.json --json
+
+# Or skip the file and edit the posted graph directly
+miramarket-cli strategies update <strategyId> --set "nodes[4].condition.threshold=0.35" --json
+```
+
+Rules that apply on top of the ones above:
+
+- `editable: false` in the `pull` envelope means there is no active run. Drafts and finished strategies cannot be edited in place — post a new one.
+- Leave every node in `lockedNodeKeys` byte-for-byte as pulled, along with `root_node_id` and `initial_principal_usd`. Touching any of them is refused before upload (exit `5`, `LOCKED_NODE_EDIT`).
+- Only fields the run actually executes can change: `allocation_pct`, `action_type`, `target.market`, `condition.threshold`, `condition.trigger`, `condition.timing`, and the graph itself. An update made only of `risk_guards`, `stabilizers`, or `market_selector` is refused (exit `5`, `UNSUPPORTED_FIELD`) rather than reported as saved.
+- A time condition whose trigger time has already passed fires the moment the run reaches it. It is accepted only if you leave it and everything it gates exactly as pulled; if you change what it gates, give it a future time too.
+- A waiting condition may gain a new sibling action in its decision group, but its own settings and existing branches are fixed.
+
 ## What an agent should never do
 
 - **Sign in, or accept the Terms/Privacy Policy/Risk Disclosure.** Both require a human, in a browser or an interactive terminal respectively. Surface the required action and stop.
@@ -351,6 +375,7 @@ miramarket-cli post ./strategy.json --json
 
 - **Treating `auth status` or `account status` exit `0` as "ready."** Both always exit `0` — read `authenticated` / `ready` in the payload.
 - **Not re-validating after editing.** `edit` always exits `0` even when the result fails validation — check `valid` and `errors` in its envelope.
+- **Editing the local file when you meant the posted strategy.** `edit` never reaches the server. A running strategy changes only through `strategies pull` and `strategies update`, and only in its future nodes.
 - **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; any `ROI_PCT`/`PNL_USD` signal is also flagged there.
 - **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — Polymarket is the only tradeable venue right now.
 - **Hand-rolling a polling loop for a run's status.** Use `strategies watch`, which has terminal-status detection and a timeout built in.

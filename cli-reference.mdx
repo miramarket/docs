@@ -41,7 +41,7 @@ Prefer branching on `code` over parsing `error` text — `error` wording can cha
 | 4 | Server failure (upstream error, geo-restricted, timeout) |
 | 5 | Bad input (missing file, malformed JSON, missing/invalid flags) |
 
-`code` values include `NOT_AUTHENTICATED`, `VALIDATION_ERROR`, `INPUT_ERROR`, `SERVER_ERROR`, `PARSE_ERROR`, `STRATEGY_NOT_FOUND`, `REGION_RESTRICTED`, `WALLET_NOT_DELEGATED`, `WATCH_TIMEOUT`, and more — this set grows over time, so don't treat it as closed.
+`code` values include `NOT_AUTHENTICATED`, `VALIDATION_ERROR`, `INPUT_ERROR`, `SERVER_ERROR`, `PARSE_ERROR`, `STRATEGY_NOT_FOUND`, `REGION_RESTRICTED`, `WALLET_NOT_DELEGATED`, `WATCH_TIMEOUT`, `INVALID_STRATEGY_STATE`, `NO_ACTIVE_RUN`, `LOCKED_NODE_EDIT`, `UNSUPPORTED_FIELD`, `RUN_EDIT_REJECTED`, and more — this set grows over time, so don't treat it as closed.
 
 ## Sign-in commands
 
@@ -161,7 +161,7 @@ Summarizes a strategy without contacting the server — node/edge counts, requir
 
 ### `miramarket-cli edit <file> [flags]`
 
-Updates fields in a strategy JSON in place. Edits apply in memory and the result is fully re-validated before writing — if validation fails, the source file is left untouched and the output reports the errors.
+Updates fields in a local strategy JSON file. Edits apply in memory and the result is fully re-validated before writing — if validation fails, the source file is left untouched and the output reports the errors. `edit` never contacts the server; to change a strategy you have already posted, use [`strategies pull` and `strategies update`](#editing-a-running-strategy).
 
 | Flag | Description |
 | --- | --- |
@@ -263,6 +263,8 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | `strategies runs <strategyId> [--limit <n>]` | Run history, most recent first. |
 | `strategies watch <strategyId> [flags]` | Polls until the run reaches a terminal status — see below. |
 | `strategies rename <strategyId> <name>` | Rename (1–120 characters). |
+| `strategies pull <strategyId> [--out <file>]` | Download a posted strategy as authoring JSON, with the node keys its active run has locked — see below. |
+| `strategies update <strategyId> [file] [--set ...] [--unset ...]` | Change the future part of a running strategy in place — see below. |
 | `strategies cancel <runId>` | Cancel an active run. |
 | `strategies exit <strategyId>` | Close a **completed** strategy, freeing its locked principal. |
 | `strategies delete <strategyId> --confirm` | Permanently delete a **draft** strategy (never started). |
@@ -281,6 +283,47 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 
 ```bash
 miramarket-cli strategies watch <strategyId> --events --timeout 600
+```
+
+### Editing a running strategy
+
+`strategies pull` and `strategies update` round-trip a strategy that is already running. Only the future part of the graph can change: nodes the run has executed or is waiting on are locked, and so are `root_node_id` and `initial_principal_usd`. Drafts and finished strategies cannot be edited in place — post a new strategy instead.
+
+#### `strategies pull <strategyId> [--out <file>] [--json]`
+
+Writes the strategy as authoring JSON (embedded in the envelope, or to `--out`) and reports which nodes you may touch:
+
+| Field | Meaning |
+| --- | --- |
+| `editable` | `true` only while a run is active. |
+| `lockedNodeKeys` | Nodes you must leave exactly as pulled. |
+| `hardLockedNodeKeys` | Executed and in-flight actions: no field or edge changes. |
+| `waitingConditionKeys` | Conditions the run is waiting on: their own settings and existing branches are fixed, but they may fan out a new sibling action. |
+| `editableNodeKeys` | Everything downstream. |
+
+Nodes keep their `node_id` across the round trip, so `nodes[i]` positions from `pull` are stable for `--set`.
+
+#### `strategies update <strategyId> [file] [--set <path>=<value>] [--unset <path>] [--json]`
+
+Uploads either a file (usually one written by `pull --out`) or the posted graph with dot-path edits applied directly, then saves it. Before anything is sent, the CLI checks the locks and validates the result; the server repeats the checks and additionally rejects edges rewired into the executed past.
+
+| Outcome | Exit | `code` |
+| --- | --- | --- |
+| A locked node, the root, or the principal changed | 5 | `LOCKED_NODE_EDIT` |
+| The edit only touches fields the server does not persist (`risk_guards`, `stabilizers`, `market_selector`) | 5 | `UNSUPPORTED_FIELD` |
+| The strategy has no active run | 5 | `NO_ACTIVE_RUN` |
+| The edited graph fails validation | 2 | `VALIDATION_ERROR` |
+| The server refused the graph (for example an edge rewired into the past) | 5 | `RUN_EDIT_REJECTED` |
+
+An `ABSOLUTE_TIME` condition whose trigger time has already passed is accepted only if you leave it, its decision group, and the actions it gates exactly as pulled; change anything it gates and you must also give it a future time.
+
+```bash
+# Pull, edit the file, push it back
+miramarket-cli strategies pull <strategyId> --out ./strategy.json --json
+miramarket-cli strategies update <strategyId> ./strategy.json --json
+
+# Or edit the posted graph directly
+miramarket-cli strategies update <strategyId> --set "nodes[4].condition.threshold=0.35" --json
 ```
 
 ## Bridging commands
