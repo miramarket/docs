@@ -84,6 +84,18 @@ miramarket-cli strategies watch <strategyId>
 
 Add `--demo` to `post` to simulate a run instead of using real funds.
 
+## Describe a strategy instead of writing it
+
+You do not have to write the JSON yourself. Describe what the strategy should do and the CLI builds it with the same assistant that powers the visual builder, then hands you a file to validate, preview, and post:
+
+```bash
+miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40 cents, sell everything at 70 cents" --out ./fed.json
+miramarket-cli validate ./fed.json
+miramarket-cli post ./fed.json --demo
+```
+
+It works for tokenized stocks too, in dollars: `"buy TSLA if it crosses $400, sell at $450"`. If the description could mean several markets, the CLI asks which one you meant; if it is missing something, it says what. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
+
 ## Everyday commands
 
 | Command | What it does |
@@ -91,18 +103,22 @@ Add `--demo` to `post` to simulate a run instead of using real funds.
 | `miramarket-cli balance` | Show your USDC balance and spendable cash. |
 | `miramarket-cli portfolio` | Show balances, open orders, and settled positions. |
 | `miramarket-cli markets search <query>` | Search Polymarket markets by keyword. |
+| `miramarket-cli stocks list` | Tokenized stocks on Base you can trade, with live prices. |
+| `miramarket-cli stocks history TSLA --range 1M` | Price history for one tokenized stock. |
+| `miramarket-cli strategies generate "<description>" --out ./s.json` | Build a strategy from plain English. |
 | `miramarket-cli strategies list` | List your strategies. |
 | `miramarket-cli strategies show <strategyId>` | Show details for one strategy. |
 | `miramarket-cli strategies pull <strategyId> --out ./strategy.json` | Download a running strategy as JSON, with the nodes you may still change. |
 | `miramarket-cli strategies update <strategyId> ./strategy.json` | Save your changes to the future part of a running strategy. |
 | `miramarket-cli strategies exit <strategyId>` | Close out a completed strategy. |
 | `miramarket-cli account withdraw --recipient <address> --confirm` | Withdraw spendable funds to an address. |
+| `miramarket-cli bridge execute --amount 100 --direction base-to-polygon --confirm` | Move USDC between Base and Polygon ahead of time. |
 | `miramarket-cli logout` | Sign out on this machine. |
 
 Every command supports a `--json` flag for machine-readable output, which agents and scripts should always use. Run any command with `--help` to see its full set of options. See the [CLI reference](/cli-reference) for every command, flag, JSON shape, and exit code.
 
 ## Using it with an AI agent
 
-The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then `miramarket-cli schema` to learn the strategy format, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
+The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then either `miramarket-cli strategies generate "<description>" --out ./s.json --json` or `miramarket-cli schema` plus hand-authored JSON, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
 
 For the full strategy JSON format, worked examples, and the rules that determine whether a strategy actually behaves as intended (most of which `validate` can't check for you), point your agent at [/agent-strategy-guide.md](/agent-strategy-guide.md) — a single markdown file meant to be fetched and read directly, not browsed.

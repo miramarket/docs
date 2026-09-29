@@ -3,9 +3,9 @@ title: "Build Polymarket strategies with an AI agent"
 description: "How an AI agent creates, validates, and runs automated Polymarket trading strategies using the Miramarket CLI — the JSON format, and the rules a validator can't check for you."
 ---
 
-Miramarket lets you build a conditional trading strategy for Polymarket — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli.md), without a human describing it turn-by-turn through a chat interface.
+Miramarket lets you build a conditional trading strategy for Polymarket markets and for tokenized stocks on Base — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli.md), without a human describing it turn-by-turn through a chat interface.
 
-An agent capable of understanding a request like *"buy YES if this market crosses above 60%, take half profit at 75% and let the rest ride to 90%"* can construct the strategy JSON for that directly from the format and rules below — there's no separate natural-language API to call first. The one thing worth knowing up front: **most of the mistakes below are not caught by `validate`.** `validate` only checks that the JSON is structurally well-formed — it has no notion of your intent, so a strategy can validate cleanly, post cleanly, and still silently do the wrong thing (most often: deploy $0 into a leg, or set up a condition that can never fire as intended). The rules in this guide exist specifically to prevent that.
+An agent capable of understanding a request like *"buy YES if this market crosses above 60%, take half profit at 75% and let the rest ride to 90%"* can construct the strategy JSON for that directly from the format and rules below. It can also hand the request to `miramarket-cli strategies generate "<request>" --out ./strategy.json --json`, which runs the same text-to-strategy pipeline as the web assistant and applies every rule on this page; the agent then validates, previews, and posts the file it gets back (see [the recommended loop](#the-recommended-loop)). The one thing worth knowing up front: **most of the mistakes below are not caught by `validate`.** `validate` only checks that the JSON is structurally well-formed — it has no notion of your intent, so a strategy can validate cleanly, post cleanly, and still silently do the wrong thing (most often: deploy $0 into a leg, or set up a condition that can never fire as intended). The rules in this guide exist specifically to prevent that.
 
 Prediction markets involve risk. Posting a strategy with `--demo` simulates it with no real funds; posting live spends real capital. Miramarket is not financial, investment, legal, or tax advice.
 
@@ -45,10 +45,10 @@ A **CONDITION** node watches a market and fires when a signal crosses a threshol
 
 ```ts
 {
-  watch: { venue: "POLYMARKET", market_id: string, outcome_token: "YES" | "NO", token_id?: string };
-  signal: "IMPLIED_PROBABILITY" | "ROI_PCT" | "PNL_USD" | "TIME_SINCE_GROUP_SECONDS" | "TIME_TO_RESOLUTION_SECONDS";
+  watch: { venue: "POLYMARKET" | "BASE_STOCKS", market_id: string, outcome_token: "YES" | "NO" | "LONG", token_id?: string };
+  signal: "IMPLIED_PROBABILITY" | "PRICE_USD" | "ROI_PCT" | "PNL_USD" | "TIME_SINCE_GROUP_SECONDS" | "TIME_TO_RESOLUTION_SECONDS";
   trigger: "CROSS_ABOVE" | "CROSS_BELOW";
-  threshold: number;
+  threshold: number;   // 0–1 for IMPLIED_PROBABILITY; dollars per share for PRICE_USD
 }
 ```
 
@@ -58,7 +58,7 @@ An **ACTION** node does something with capital:
 {
   action_type: "BUY_MARKET_OUTCOME" | "SELL_MARKET_OUTCOME" | "HOLD" | "MOVE_TO_WALLET";
   allocation_pct?: number;   // required when the decision group is SPLIT_100
-  target: { venue?: "POLYMARKET", market?: { market_id: string, outcome_token: string, token_id: string } };
+  target: { venue?: "POLYMARKET" | "BASE_STOCKS", market?: { market_id: string, outcome_token: string, token_id: string } };
 }
 ```
 
@@ -95,6 +95,22 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 **12. Structural limits.** Up to 24 stages, up to 4 actions per decision group, a practical ceiling of 4 distinct markets per strategy, and a 500 KB / 500-node cap at posting time.
 
 **13. A "gated entry, then a genuine partial exit" has no shortcut — hand-chain it.** There's no single field for "enter when X, then take partial profit at Y, leaving the rest running." Build it explicitly as `[MOVE_TO_WALLET x%, HOLD (100-x)%]` pairs, per rule 1, chained off the entry's own condition.
+
+**14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as swaps on Aerodrome, not as CLOB orders, and are watched through the token's Chainlink reference feed. Three consequences:
+
+- A condition watching a stock uses `signal: "PRICE_USD"` with the threshold in dollars per share: `"threshold": 400` means $400.00. `validate` rejects `IMPLIED_PROBABILITY` on a stock watch, `PRICE_USD` on a prediction market, and a non-positive dollar threshold. "If TSLA crosses $400, buy it" is `{ watch: <TSLAc>, signal: "PRICE_USD", trigger: "CROSS_ABOVE", threshold: 400 }`.
+- A stock never resolves. `TIME_TO_RESOLUTION_SECONDS` on a stock watch is rejected; use `PRICE_USD` or an absolute time. A stock leg with no exit condition is sold when the strategy finishes.
+- Its price is dollars per share, not a 0–1 probability. Never apply rule 3's 3¢/97¢ sanity check to it. The condition watches the *reference* price (what the share is worth); the pool price `stocks show` reports is what a swap pays, typically a fraction of a percent above it.
+
+The node shape is fixed: `venue: "BASE_STOCKS"`, `market_id` **and** `token_id` both the token's contract address, `outcome_token: "LONG"` (single-sided — you own the share or you don't). Take it from the CLI rather than assembling it:
+
+```bash
+miramarket-cli stocks list --json                          # tradable catalog + live prices
+miramarket-cli stocks show TSLA --json | jq .actionTarget  # paste-ready target block
+miramarket-cli stocks history TSLA --range 1M --json       # pool price history, dollars per token
+```
+
+Three registry tokens (COINc, CRCLc, INTCc) have no pool and cannot be traded; `stocks show` says so by name instead of reporting them as unknown. Tokenized stocks are geo-restricted: where they are not offered, a live `post` of a strategy that buys one is refused with "Tokenized stocks are not available in your region" (exit `4`). `account status --json` shows the region check under `checks.geo`.
 
 ## Worked examples
 
@@ -325,7 +341,12 @@ miramarket-cli account status --json
 # 2. Get the exact types
 miramarket-cli schema --format=ts
 
-# 3. Author the strategy JSON, applying the rules above
+# 3. Author the strategy JSON, applying the rules above -- or have it generated.
+#    ok is true for every `result`; branch on it: "strategy" wrote the file,
+#    "market_selection" needs `--choose <n>`, "clarification" needs a fuller
+#    prompt. Read unmatched[] and notices[] before going further: a leg the
+#    request named may have been substituted or left out, disclosed there.
+miramarket-cli strategies generate "buy YES on <market> below 40c, sell at 70c" --out ./strategy.json --json
 
 # 4. Validate — structural errors only, see "what validate checks" above
 miramarket-cli validate ./strategy.json --json
@@ -377,5 +398,7 @@ Rules that apply on top of the ones above:
 - **Not re-validating after editing.** `edit` always exits `0` even when the result fails validation — check `valid` and `errors` in its envelope.
 - **Editing the local file when you meant the posted strategy.** `edit` never reaches the server. A running strategy changes only through `strategies pull` and `strategies update`, and only in its future nodes.
 - **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; any `ROI_PCT`/`PNL_USD` signal is also flagged there.
-- **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — Polymarket is the only tradeable venue right now.
+- **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — `POLYMARKET` and `BASE_STOCKS` are the tradeable venues.
+- **Treating a stock's price as a probability.** `stocks show` and `stocks history` report dollars per share. A `BASE_STOCKS` condition uses `PRICE_USD` with a dollar threshold (rule 14), never `IMPLIED_PROBABILITY`.
+- **Treating `strategies generate` exit `0` as "built".** `ok` is `true` for all four `result` values. Only `strategy` wrote a file; `market_selection` is answered with `--choose`, and re-sending the prompt starts over.
 - **Hand-rolling a polling loop for a run's status.** Use `strategies watch`, which has terminal-status detection and a timeout built in.

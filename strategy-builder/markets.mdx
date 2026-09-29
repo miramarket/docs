@@ -3,7 +3,7 @@ title: "Markets and outcomes"
 description: "Find a market, choose the right outcome, and add it to a strategy."
 ---
 
-Markets are the questions a strategy can use. Miramarket currently supports Polymarket. A market action attempts to buy a selected side of a market when you run the strategy; execution and fills are not guaranteed.
+Markets are the questions a strategy can use. Miramarket supports Polymarket markets and, under the **Stocks** category, tokenized stocks on Base. A market action attempts to buy a selected side of a market when you run the strategy; execution and fills are not guaranteed.
 
 ## Use the Market tab
 
@@ -60,6 +60,18 @@ Read the event's resolution details before you add a grouped outcome. A group ca
 Use the search box to narrow the list. Search by topic, team, asset, person, or event.
 
 If you cannot find the right market, do not use a similar-looking one unless you understand how it resolves.
+
+## Tokenized stocks
+
+The **Stocks** category in the Market tab lists tokenized stocks on Base: real equities such as Tesla, NVIDIA, and Apple wrapped as tokens (TSLAc, NVDAc, AAPLc). They are not prediction markets, and they behave differently in a strategy:
+
+- A stock has no `YES` or `NO` side. You either hold it or you do not, so a stock action simply buys it.
+- Its price is in **dollars per share**, not cents or a probability. A price condition on a stock uses a dollar threshold, for example "if TSLA crosses above $400".
+- It is bought and sold as a token swap on Base rather than as a Polymarket order, so the price you pay is the pool's price, which sits slightly above the reference share price. The card shows both.
+- A stock never resolves. A resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
+- Tokenized stocks are not offered in every region. If they are unavailable where you are, a strategy that buys one cannot be run live.
+
+Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. The strategy assistant understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
 
 ## Add a market action to the canvas
 
