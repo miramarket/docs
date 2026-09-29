@@ -71,11 +71,11 @@ The **Stocks** category in the Market tab lists tokenized stocks on Base: real e
 - A stock never resolves. A resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
 - Tokenized stocks are not offered in every region. If they are unavailable where you are, a strategy that buys one cannot be run live.
 
-Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. The strategy assistant understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
+Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. There is no side to pick: click the card to add a **Buy** action for that stock, or drag it onto the canvas. A card with no price cannot be added until a price is available. The strategy assistant understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
 
 ## Add a market action to the canvas
 
-Selecting `YES` or `NO` prepares the card. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
+For a prediction market, selecting `YES` or `NO` prepares the card; a [tokenized stock](#tokenized-stocks) card has no side and is added directly. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
 
 When the card appears on the canvas, verify the market, named outcome, selected side, and allocation. The action defaults to `100%` when it is the only action in its decision.
 

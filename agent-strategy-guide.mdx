@@ -96,7 +96,7 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 
 **13. A "gated entry, then a genuine partial exit" has no shortcut — hand-chain it.** There's no single field for "enter when X, then take partial profit at Y, leaving the rest running." Build it explicitly as `[MOVE_TO_WALLET x%, HOLD (100-x)%]` pairs, per rule 1, chained off the entry's own condition.
 
-**14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as swaps on Aerodrome, not as CLOB orders, and are watched through the token's Chainlink reference feed. Three consequences:
+**14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as token swaps, not as Polymarket orders, and are watched through the share's reference price feed. Three consequences:
 
 - A condition watching a stock uses `signal: "PRICE_USD"` with the threshold in dollars per share: `"threshold": 400` means $400.00. `validate` rejects `IMPLIED_PROBABILITY` on a stock watch, `PRICE_USD` on a prediction market, and a non-positive dollar threshold. "If TSLA crosses $400, buy it" is `{ watch: <TSLAc>, signal: "PRICE_USD", trigger: "CROSS_ABOVE", threshold: 400 }`.
 - A stock never resolves. `TIME_TO_RESOLUTION_SECONDS` on a stock watch is rejected; use `PRICE_USD` or an absolute time. A stock leg with no exit condition is sold when the strategy finishes.

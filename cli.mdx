@@ -90,11 +90,17 @@ You do not have to write the JSON yourself. Describe what the strategy should do
 
 ```bash
 miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40 cents, sell everything at 70 cents" --out ./fed.json
+```
+
+The command writes `./fed.json` only when it reports `result: strategy`. If the description could mean several markets, it lists them and asks which one you meant; if it is missing something, it says what; if you asked a question, it answers. Read the result before going on, including `unmatched`, which lists anything you named that could not be matched and was substituted or left out. Once a file is written, continue as with any other strategy file:
+
+```bash
 miramarket-cli validate ./fed.json
+miramarket-cli preview ./fed.json
 miramarket-cli post ./fed.json --demo
 ```
 
-It works for tokenized stocks too, in dollars: `"buy TSLA if it crosses $400, sell at $450"`. If the description could mean several markets, the CLI asks which one you meant; if it is missing something, it says what. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
+It works for tokenized stocks too, in dollars: `"buy TSLA if it crosses $400, sell at $450"`. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
 
 ## Everyday commands
 

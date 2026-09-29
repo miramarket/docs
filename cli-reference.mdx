@@ -142,18 +142,19 @@ Prints the strategy schema — `ts` for TypeScript types, `json` for a JSON Sche
 
 ### `miramarket-cli strategies generate [prompt] [flags]`
 
-Text-to-strategy. Describe what the strategy should do in plain English and get authoring JSON back, built by the same pipeline as the web assistant (intent parsing, market search and ranking, shape selection, compilation, critique). Requires authentication. Nothing is validated or posted on your behalf: run `validate`, `preview`, and `post` on the result exactly as you would for a hand-written file.
+Text-to-strategy. Describe what the strategy should do in plain English and get authoring JSON back, built by the same assistant that powers the visual builder. Requires authentication. Nothing is validated or posted on your behalf: run `validate`, `preview`, and `post` on the result exactly as you would for a hand-written file.
 
 | Flag | Description |
 | --- | --- |
 | `--out <file>` | Write the strategy JSON here. Without it the strategy is embedded in the result as `strategy`. |
 | `--strategy <file>` | Edit an existing local strategy file instead of building from scratch: the prompt is applied as a change to it, and `changeSummary` lists what changed. |
-| `--choose <n\|marketId>` | Answer the market question from the previous call (see below). Do not pass a prompt with it. |
+| `--choose <marketId\|n>` | Answer the market question from the previous call (see below): a candidate's market id, or its number as printed. Do not pass a prompt with it. |
+| `--selection <id>` | With `--choose`: the `selectionId` the question came with, so a question asked by another session in the meantime is refused rather than answered. |
 
 `result` is one of four values. `ok` is `true` for all of them, because each is a real outcome rather than a failure:
 
 - `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg with `PRICE_USD` conditions in dollars, ready to post.
-- `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally. Answer with `strategies generate --choose <choice|marketId>` on the next call. At an interactive terminal the choice is prompted for in place instead.
+- `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question.
 - `clarification` — nothing was built; `question` says what is missing. Re-run with a prompt that answers it.
 - `answer` — the prompt was a question rather than a build request; `answer` is the reply.
 
@@ -161,7 +162,7 @@ Text-to-strategy. Describe what the strategy should do in plain English and get 
 miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40c, sell at 70c" --out ./fed.json --json
 miramarket-cli strategies generate "buy TSLA if it crosses \$400, sell at \$450" --out ./tsla.json --json
 miramarket-cli strategies generate "also sell everything if it drops below 30c" --strategy ./fed.json --out ./fed.json --json
-miramarket-cli strategies generate --choose 2 --out ./fed.json --json
+miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out ./fed.json --json
 ```
 
 ```json
@@ -187,7 +188,7 @@ miramarket-cli strategies generate --choose 2 --out ./fed.json --json
 }
 ```
 
-Exit codes: `0` for every `result`, `3` auth error, `4` the pipeline failed (`code` is its own code, e.g. `MARKET_RESOLUTION_FAILED`), `5` bad input (no prompt, a prompt together with `--choose`, `--choose` with nothing pending, or an unreadable `--strategy` file).
+Exit codes: `0` for every `result`, `3` auth error, `4` generation failed (`code` says why, e.g. `MARKET_RESOLUTION_FAILED`), `5` bad input (no prompt, a prompt together with `--choose`, `--choose` with nothing pending or a stale `--selection`, a question that is not resumable, or an unreadable `--strategy` file).
 
 ### `miramarket-cli validate <file> [--json]`
 
@@ -277,7 +278,7 @@ None of these require authentication.
 
 ## Tokenized stock commands
 
-B20 tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities wrapped as tokens. They are not prediction markets: a strategy buys and sells them as swaps on Aerodrome, and a condition watches them by **share price in dollars** through the token's Chainlink reference feed. `markets search` never finds them, so these commands exist instead. None require authentication.
+Tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities wrapped as tokens. They are not prediction markets: a strategy buys and sells them as token swaps, and a condition watches them by **share price in dollars**. `markets search` never finds them, so these commands exist instead. None require authentication.
 
 | Command | What it does |
 | --- | --- |
@@ -305,7 +306,7 @@ B20 tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities
 }
 ```
 
-Two prices appear, and they mean different things. `priceUsd` is the Aerodrome pool's price, what a swap actually pays, and what a position is sized from. `oraclePriceUsd` is the Chainlink reference price for the underlying share, what a `PRICE_USD` condition watches; the gap between them is `poolPremiumBps`. Both are dollars per share, never a 0–1 probability. A large `oracleAgeSeconds` outside US market hours is expected, not a fault.
+Two prices appear, and they mean different things. `priceUsd` is the pool price, what a swap actually pays, and what a position is sized from. `oraclePriceUsd` is the reference price of the underlying share, what a `PRICE_USD` condition watches; the gap between them is `poolPremiumBps`. Both are dollars per share, never a 0–1 probability. A large `oracleAgeSeconds` outside US market hours is expected, not a fault.
 
 ```json
 {
@@ -324,7 +325,7 @@ Two prices appear, and they mean different things. `priceUsd` is the Aerodrome p
 }
 ```
 
-`stocks history` charts the pool price, not the reference price. `stale: true` means the history provider was unavailable and the server returned its last good reading.
+`stocks history` charts the pool price (`priceSource` names it), not the reference price. `stale: true` means fresh history was unavailable and the last good reading was returned.
 
 `stocks show` and `stocks history` exit `5` for a company that is not in the registry, and, distinctly, for one that is listed but has no pool to trade in yet (COINc, CRCLc, INTCc). `portfolio` reports stock holdings separately from cash (`stockPositions`, `stockValueUsd`), because a share has to be sold before a strategy can spend the proceeds. Tokenized stocks are geo-restricted: where they are not offered, posting a live strategy that buys one is refused with "Tokenized stocks are not available in your region". `account status --json` shows the region check under `checks.geo`.
 
@@ -441,7 +442,11 @@ Move USDC between Base and Polygon, or swap Polygon USDC to USDC.e, before tradi
 
 `--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`. The last two are same-chain swaps on Polygon, which have no bridge to poll.
 
-By default `bridge execute` waits: `ok: true` means a cross-chain transfer filled, or a same-chain swap confirmed on-chain. It exits `4` with `BRIDGE_FAILED` when the bridge fails (the envelope says whether the funds were refunded), `BRIDGE_PENDING` when it is still in flight after the polling window, and `SWAP_UNCONFIRMED` when a same-chain swap was submitted but not yet confirmed. None of these is a reason to run `bridge execute` again: the origin transaction is already on-chain, and a retry would move the funds a second time. Poll with `bridge status` instead.
+By default `bridge execute` waits: `ok: true` means a cross-chain transfer filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
+
+- `BRIDGE_FAILED`: the cross-chain bridge failed. The envelope says whether the funds were refunded on the origin chain.
+- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. Poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope.
+- `SWAP_UNCONFIRMED`: a same-chain swap on Polygon was submitted but not confirmed within the wait window. There is no bridge to poll. Look up the `txHash` from the envelope on a Polygon block explorer, or run `balance --chain polygon` until the USDC and USDC.e balances reflect the swap.
 
 ```bash
 miramarket-cli bridge quote --amount 100 --direction base-to-polygon --json
