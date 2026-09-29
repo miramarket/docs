@@ -23,7 +23,7 @@
 - Use "template" for a ready-made strategy a user can start from instead of building node by node.
 - Use "Run Simulation" for simulated runs.
 - Use "Run Live" for runs that can use real funds.
-- State that Polymarket is the currently supported venue.
+- State that Polymarket is the currently supported prediction market venue, and that tokenized stocks on Base are also supported as a separate, non-prediction-market asset.
 - Treat the live builder and **Run Live** as available features, not future features.
 
 ## Style preferences
@@ -42,7 +42,7 @@
 - Document the Miramarket website, strategy builder, markets, conditions, actions, recurring markets, glossary terms, simulation/live behavior, and CLI/MCP setup and usage.
 - Do not document Convex internals.
 - Do not document backend implementation details.
-- For the CLI and MCP server: document installation, authentication, account setup, and the everyday command/tool surface a user or agent needs. Do not reproduce the full internal flag-by-flag reference, exit-code tables, or test/CI documentation from the source repository's own READMEs — link out or summarize instead of copying wholesale.
+- For the CLI and MCP server: document installation, authentication, account setup, and the everyday command/tool surface a user or agent needs. `cli.mdx` is that summary. `cli-reference.mdx` is the one page that carries the full command reference (flags, JSON shapes, exit codes) so agents have a single fetchable source; keep it factual and do not copy test/CI documentation or internal implementation notes from the source repository's own READMEs.
 - Describe signing in and adding funds factually (sign in, then deposit by card, exchange transfer, or wallet transfer) without asserting a custodial or non-custodial claim, and note that it is separate from starting a live run.
 - Do not imply that execution or fills are guaranteed.
 - Do not document unrelated app, service, monitoring, deployment, or internal testing details.

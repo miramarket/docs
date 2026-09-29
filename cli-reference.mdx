@@ -188,7 +188,7 @@ miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out .
 }
 ```
 
-Exit codes: `0` for every `result`, `3` auth error, `4` generation failed (`code` says why, e.g. `MARKET_RESOLUTION_FAILED`), `5` bad input (no prompt, a prompt together with `--choose`, `--choose` with nothing pending or a stale `--selection`, a question that is not resumable, or an unreadable `--strategy` file).
+Exit codes: `0` for every `result`, `3` auth error, `4` generation failed, `5` bad input (`code` says which).
 
 ### `miramarket-cli validate <file> [--json]`
 
