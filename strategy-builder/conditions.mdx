@@ -32,6 +32,8 @@ Check the side and comparison carefully. `>` and `<` produce opposite behavior. 
 
 If you add more than one rule to the same condition, every rule must be met. For example, you can wait for a `YES` side to reach `60¢` **and** for the market to be within ten minutes of close.
 
+A price condition can also watch a [tokenized stock](/strategy-builder/markets#tokenized-stocks). The threshold is then a share price in dollars rather than a probability: "if TSLA is greater than `$400`, continue." The condition watches the stock's reference price feed, which sits slightly below the pool price a trade pays.
+
 ## Time Condition
 
 Use **Time Condition** when the strategy should continue before a market closes or at a specific time. Choose the market first, then set the timing mode and value.
@@ -41,7 +43,7 @@ Examples:
 - "Continue 10 minutes before the selected market closes."
 - "Continue at the chosen date and time."
 
-Miramarket currently supports Polymarket. If the builder does not offer the timing you need for a market, choose a different condition or market.
+Time conditions apply to Polymarket markets. A tokenized stock has no close or resolution, so only a specific date and time can be used with one. If the builder does not offer the timing you need for a market, choose a different condition or market.
 
 ## Resolution
 
@@ -76,6 +78,7 @@ Ask yourself:
 - Watching the wrong market or side.
 - Reversing a price comparison.
 - Treating market close and market resolution as the same moment.
+- Entering a probability where a stock condition expects dollars. A stock threshold of `0.6` means sixty cents a share, not 60%.
 - Using **Run Live** before testing with **Simulate**.
 
 See [Strategy builder nodes](/strategy-builder/nodes) for a concise node reference and [Strategy examples](/strategy-builder/examples) for complete patterns.

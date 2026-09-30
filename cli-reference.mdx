@@ -140,6 +140,56 @@ See [/agent-strategy-guide.md](/agent-strategy-guide.md) for the JSON format its
 
 Prints the strategy schema — `ts` for TypeScript types, `json` for a JSON Schema document, `markdown` for a prose authoring guide with worked examples.
 
+### `miramarket-cli strategies generate [prompt] [flags]`
+
+Text-to-strategy. Describe what the strategy should do in plain English and get authoring JSON back, built by the same assistant that powers the visual builder. Requires authentication. Nothing is validated or posted on your behalf: run `validate`, `preview`, and `post` on the result exactly as you would for a hand-written file.
+
+| Flag | Description |
+| --- | --- |
+| `--out <file>` | Write the strategy JSON here. Without it the strategy is embedded in the result as `strategy`. |
+| `--strategy <file>` | Edit an existing local strategy file instead of building from scratch: the prompt is applied as a change to it, and `changeSummary` lists what changed. |
+| `--choose <marketId\|n>` | Answer the market question from the previous call (see below): a candidate's market id, or its number as printed. Do not pass a prompt with it. |
+| `--selection <id>` | With `--choose`: the `selectionId` the question came with, so a question asked by another session in the meantime is refused rather than answered. |
+
+`result` is one of four values. `ok` is `true` for all of them, because each is a real outcome rather than a failure:
+
+- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg with `PRICE_USD` conditions in dollars, ready to post.
+- `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question.
+- `clarification` — nothing was built; `question` says what is missing. Re-run with a prompt that answers it.
+- `answer` — the prompt was a question rather than a build request; `answer` is the reply.
+
+```bash
+miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40c, sell at 70c" --out ./fed.json --json
+miramarket-cli strategies generate "buy TSLA if it crosses \$400, sell at \$450" --out ./tsla.json --json
+miramarket-cli strategies generate "also sell everything if it drops below 30c" --strategy ./fed.json --out ./fed.json --json
+miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out ./fed.json --json
+```
+
+```json
+{
+  "ok": true,
+  "command": "strategies generate",
+  "prompt": "buy TSLA if it crosses $400, sell at $450",
+  "result": "strategy",
+  "strategyPath": "./tsla.json",
+  "edited": false,
+  "markets": [
+    { "market_id": "0xb2000000000000000000001e800a7f5189430cD0", "title": "Tesla Inc. (TSLAc)", "venue": "BASE_STOCKS", "outcome": "LONG", "current_price": 355.69 }
+  ],
+  "stats": { "actionCount": 2, "conditionCount": 2, "riskProfile": "BALANCED", "heuristicScore": 90 },
+  "notices": [],
+  "unmatched": [],
+  "changeSummary": [],
+  "nextCommands": [
+    "miramarket-cli validate ./tsla.json --json",
+    "miramarket-cli preview ./tsla.json --json",
+    "miramarket-cli post ./tsla.json --demo --json"
+  ]
+}
+```
+
+Exit codes: `0` for every `result`, `3` auth error, `4` generation failed, `5` bad input (`code` says which).
+
 ### `miramarket-cli validate <file> [--json]`
 
 Validates a strategy JSON file's structure. Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
@@ -226,6 +276,59 @@ None of these require authentication.
 }
 ```
 
+## Tokenized stock commands
+
+Tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities wrapped as tokens. They are not prediction markets: a strategy buys and sells them as token swaps, and a condition watches them by **share price in dollars**. `markets search` never finds them, so these commands exist instead. None require authentication.
+
+| Command | What it does |
+| --- | --- |
+| `stocks list` | Every tradable stock with its live pool price. `priced` says how many rows have a usable price; an unpriced row is still listed, just not sizable right now. |
+| `stocks show <stock>` | One stock, with the exact `actionTarget` block to paste into an ACTION node. Accepts a ticker (`TSLA`), token symbol (`TSLAc`), company name (`Tesla`), or contract address. |
+| `stocks history <stock> [--range 1D\|1W\|1M\|ALL]` | Pool price history, oldest bar first. `1D` is 15-minute bars, `1W` (default) hourly, `1M` 4-hourly, `ALL` daily. |
+
+```json
+{
+  "ok": true,
+  "command": "stocks show",
+  "symbol": "TSLAc",
+  "ticker": "TSLA",
+  "name": "Tesla Inc.",
+  "address": "0xb2000000000000000000001e800a7f5189430cD0",
+  "priceUsd": 356.47,
+  "oraclePriceUsd": 353.33,
+  "poolPremiumBps": 89,
+  "actionTarget": {
+    "venue": "BASE_STOCKS",
+    "market": { "market_id": "0xb2000000000000000000001e800a7f5189430cD0", "outcome_token": "LONG", "token_id": "0xb2000000000000000000001e800a7f5189430cD0" }
+  },
+  "conditionSupported": true,
+  "conditionSignal": "PRICE_USD"
+}
+```
+
+Two prices appear, and they mean different things. `priceUsd` is the pool price, what a swap actually pays, and what a position is sized from. `oraclePriceUsd` is the reference price of the underlying share, what a `PRICE_USD` condition watches; the gap between them is `poolPremiumBps`. Both are dollars per share, never a 0–1 probability. A large `oracleAgeSeconds` outside US market hours is expected, not a fault.
+
+```json
+{
+  "ok": true,
+  "command": "stocks history",
+  "ticker": "TSLA",
+  "range": "1W",
+  "priceSource": "aerodrome_pool",
+  "unit": "USD per token",
+  "stale": false,
+  "count": 168,
+  "firstPriceUsd": 351.12,
+  "lastPriceUsd": 356.47,
+  "changePct": 1.52,
+  "points": [{ "t": 1790000000, "p": 351.12 }, { "t": 1790003600, "p": 351.9 }]
+}
+```
+
+`stocks history` charts the pool price (`priceSource` names it), not the reference price. `stale: true` means fresh history was unavailable and the last good reading was returned.
+
+`stocks show` and `stocks history` exit `5` for a company that is not in the registry, and, distinctly, for one that is listed but has no pool to trade in yet (COINc, CRCLc, INTCc). `portfolio` reports stock holdings separately from cash (`stockPositions`, `stockValueUsd`), because a share has to be sold before a strategy can spend the proceeds. Tokenized stocks are geo-restricted: where they are not offered, posting a live strategy that buys one is refused with "Tokenized stocks are not available in your region". `account status --json` shows the region check under `checks.geo`.
+
 ## Trading and portfolio commands
 
 ### `miramarket-cli trade [flags]`
@@ -252,12 +355,13 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | `order status [orderId]` | Status of one order, or all open orders if omitted. |
 | `order cancel <orderId> --confirm` | Cancels an open GTC order. |
 | `balance [--chain base\|polygon\|all]` | USDC balance per chain, plus `cash` (gross minus locked/pending). |
-| `portfolio` | Balances, open orders, settled positions, capital reservations. |
+| `portfolio [--venue polymarket\|base-stocks\|all]` | Balances, open orders, settled positions, tokenized stock holdings, capital reservations. |
 
 ## Strategy management commands
 
 | Command | What it does |
 | --- | --- |
+| `strategies generate [prompt] [--out <file>]` | Build a strategy from a plain-English description — see [Strategy authoring commands](#strategy-authoring-commands). |
 | `strategies list` | Every strategy you own, with status and latest run info. |
 | `strategies show <strategyId> [--verbose]` | Detail for one strategy; `--verbose` adds per-node PnL, executed trades, and settlement detail. |
 | `strategies runs <strategyId> [--limit <n>]` | Run history, most recent first. |
@@ -332,11 +436,25 @@ Move USDC between Base and Polygon, or swap Polygon USDC to USDC.e, before tradi
 
 | Command | Description |
 | --- | --- |
-| `bridge quote --amount <usd> --direction <direction>` | Get a quote. Returns `requestId`, `expectedInputAmount`, `expectedOutputAmount`. |
-| `bridge execute --amount <usd> --direction <direction> --confirm [--no-wait]` | Execute the transfer. |
-| `bridge status <requestId>` | Poll transfer status (no auth required). |
+| `bridge quote --amount <usd> --direction <direction>` | Get a 0x quote. Returns `quoteId`, `transactions[]`, `expectedInputAmount`, `expectedOutputAmount`, `isCrossChain`. |
+| `bridge execute --amount <usd> --direction <direction> --confirm [--no-wait]` | Execute the transfer. Returns `quoteId`, `txHash` (the origin transaction), `txHashes[]`, `chainId`, and either `bridgeStatus` (cross-chain) or `settled` (same-chain swap). |
+| `bridge status <txHash> --chain-id <8453\|137> [--quote-id <id>]` | Poll a cross-chain transfer by its origin transaction hash (no auth required). `status` is one of `origin_tx_pending`, `origin_tx_succeeded`, `origin_tx_confirmed`, `origin_tx_reverted`, `bridge_pending`, `bridge_filled`, `bridge_failed`, `unknown`. |
 
-`--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`.
+`--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`. The last two are same-chain swaps on Polygon, which have no bridge to poll.
+
+By default `bridge execute` waits: `ok: true` means a cross-chain transfer filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
+
+- `BRIDGE_FAILED`: the cross-chain bridge failed. The envelope says whether the funds were refunded on the origin chain.
+- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. Poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope.
+- `SWAP_UNCONFIRMED`: a same-chain swap on Polygon was submitted but not confirmed within the wait window. There is no bridge to poll. Look up the `txHash` from the envelope on a Polygon block explorer, or run `balance --chain polygon` until the USDC and USDC.e balances reflect the swap.
+
+```bash
+miramarket-cli bridge quote --amount 100 --direction base-to-polygon --json
+miramarket-cli bridge execute --amount 100 --direction base-to-polygon --confirm --json
+miramarket-cli bridge status 0xabc... --chain-id 8453 --json
+```
+
+A strategy funds itself. Posting one that needs USDC on the other chain bridges on demand, so a manual bridge is only for moving funds ahead of time or for withdrawing.
 
 ## `miramarket-cli status`
 

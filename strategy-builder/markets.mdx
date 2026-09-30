@@ -3,7 +3,7 @@ title: "Markets and outcomes"
 description: "Find a market, choose the right outcome, and add it to a strategy."
 ---
 
-Markets are the questions a strategy can use. Miramarket currently supports Polymarket. A market action attempts to buy a selected side of a market when you run the strategy; execution and fills are not guaranteed.
+Markets are the questions a strategy can use. Polymarket is the supported prediction market venue. Separately, the **Stocks** category offers tokenized stocks on Base, which are not prediction markets and behave differently (see below). A market action attempts to buy a selected side of a market when you run the strategy; execution and fills are not guaranteed.
 
 ## Use the Market tab
 
@@ -61,9 +61,21 @@ Use the search box to narrow the list. Search by topic, team, asset, person, or 
 
 If you cannot find the right market, do not use a similar-looking one unless you understand how it resolves.
 
+## Tokenized stocks
+
+The **Stocks** category in the Market tab lists tokenized stocks on Base: real equities such as Tesla, NVIDIA, and Apple wrapped as tokens (TSLAc, NVDAc, AAPLc). They are not prediction markets, and they behave differently in a strategy:
+
+- A stock has no `YES` or `NO` side. You either hold it or you do not, so a stock action simply buys it.
+- Its price is in **dollars per share**, not cents or a probability. A price condition on a stock uses a dollar threshold, for example "if TSLA crosses above $400".
+- It is bought and sold as a token swap on Base rather than as a Polymarket order, so the price you pay is the pool's price, which sits slightly above the reference share price. The card shows both.
+- A stock never resolves. A resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
+- Tokenized stocks are not offered in every region. If they are unavailable where you are, a strategy that buys one cannot be run live.
+
+Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. There is no side to pick: click the card to add a **Buy** action for that stock, or drag it onto the canvas. A card with no price cannot be added until a price is available. The strategy assistant understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
+
 ## Add a market action to the canvas
 
-Selecting `YES` or `NO` prepares the card. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
+For a prediction market, selecting `YES` or `NO` prepares the card; a [tokenized stock](#tokenized-stocks) card has no side and is added directly. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
 
 When the card appears on the canvas, verify the market, named outcome, selected side, and allocation. The action defaults to `100%` when it is the only action in its decision.
 
