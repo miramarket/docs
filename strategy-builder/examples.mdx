@@ -131,7 +131,7 @@ Use this when you want a leveraged position that closes itself if the price fall
 4. Add **Exit** after that condition with a `100%` allocation.
 5. Run a simulation.
 
-Plain meaning: the strategy opens a long position and closes it if the price falls to your stop. Keep the stop well inside the liquidation distance, roughly `1 ÷ leverage` from your entry, or the exchange may close the position first. For a `SHORT`, set the stop with "greater than" at a price above your entry. See [Perps](/strategy-builder/perps).
+Plain meaning: the strategy opens a long position and closes it if the price falls to your stop. Keep the stop well before the position's liquidation price, or the exchange may close the position first. See [Costs and risks](/strategy-builder/perps#costs-and-risks) for how far that is for each kind of perp. For a `SHORT`, set the stop with "greater than" at a price above your entry. See [Perps](/strategy-builder/perps).
 
 ## Before every simulation
 

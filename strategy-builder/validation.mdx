@@ -36,7 +36,7 @@ Use this checklist after a successful simulation and before **Run Live**, which 
 ## Check a perp
 
 - Is the leverage what you intend? Leverage multiplies losses as well as gains.
-- Is every stop-loss closer to your entry than the liquidation distance, roughly `1 ÷ leverage`?
+- Is every stop-loss closer to your entry than the liquidation price? For a stock, index, commodity, FX, rates, or pre-IPO perp that is roughly `1 ÷ leverage` away. A crypto perp's depends on your whole Hyperliquid balance and other open crypto positions, so check its actual liquidation price.
 - Does each perp order reach the `$10` minimum: its amount times its leverage?
 - Are you comfortable paying funding for as long as the position may stay open?
 

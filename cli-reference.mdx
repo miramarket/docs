@@ -340,7 +340,7 @@ Perps are perpetual futures on Hyperliquid, margined in USDC. They are not predi
 
 There are two kinds of perp:
 
-- Perps on Hyperliquid's main dex: crypto such as `BTC`, `ETH`, and `SOL`. Positions are cross margin.
+- Perps on Hyperliquid's main dex: crypto such as `BTC`, `ETH`, and `SOL`. Positions are cross margin: your whole main-dex balance and your other cross positions back them together, so a position's liquidation price depends on all of them, not on its leverage alone.
 - HIP-3 perps, listed on Hyperliquid by other providers (the `xyz`, `para`, `io`, and `mkts` dexes): stocks, indices, commodities, FX, rates, and pre-IPO names. Their coin carries the dex (`xyz:NVDA`, `para:10Y`) and their positions are always **isolated** margin: only that position's margin backs it.
 
 Ids are `hl:<COIN>` (`hl:BTC`) or `hl:<dex>:<COIN>` (`hl:xyz:NVDA`), spelled exactly as `perps list` prints them. Coins are case-sensitive (`hl:kPEPE`); never upper-case them.
@@ -585,17 +585,19 @@ Move USDC between Base and Polygon, swap Polygon USDC to USDC.e, or move USDC in
 | --- | --- |
 | `bridge quote --amount <usd> --direction <direction>` | Get a 0x quote. Returns `quoteId`, `transactions[]`, `expectedInputAmount`, `expectedOutputAmount`, `isCrossChain`. |
 | `bridge execute --amount <usd> --direction <direction> --confirm [--no-wait]` | Execute the transfer. Returns `quoteId`, `txHash` (the origin transaction), `txHashes[]`, `chainId`, and either `bridgeStatus` (cross-chain) or `settled` (same-chain swap). |
-| `bridge status <txHash> --chain-id <8453\|137> [--quote-id <id>]` | Poll a cross-chain transfer by its origin transaction hash (no auth required). `status` is one of `origin_tx_pending`, `origin_tx_succeeded`, `origin_tx_confirmed`, `origin_tx_reverted`, `bridge_pending`, `bridge_filled`, `bridge_failed`, `unknown`. |
+| `bridge status <txHash> --chain-id <8453\|137> [--quote-id <id>]` | Poll a transfer between Base and Polygon by its origin transaction hash (no auth required). It cannot confirm delivery into Hyperliquid. `status` is one of `origin_tx_pending`, `origin_tx_succeeded`, `origin_tx_confirmed`, `origin_tx_reverted`, `bridge_pending`, `bridge_filled`, `bridge_failed`, `unknown`. |
 
 `--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`, `polygon-to-hyperliquid`, `base-to-hyperliquid`. `polygon-usdc-to-usdce` and `polygon-usdce-to-usdc` are same-chain swaps on Polygon, which have no bridge to poll.
 
-The two `*-to-hyperliquid` directions deliver USDC into your perps balance on Hyperliquid. They are one-way: there is no direction back out. Money leaves Hyperliquid automatically when a withdrawal or a leg on another chain needs it. `bridge status` does not track delivery into Hyperliquid; confirm arrival with `perps positions` (`withdrawableUsd`).
+The two `*-to-hyperliquid` directions deliver USDC into your perps balance on Hyperliquid. They are one-way: there is no direction back out. Money leaves Hyperliquid automatically when a withdrawal or a leg on another chain needs it.
 
-By default `bridge execute` waits: `ok: true` means a cross-chain transfer filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
+By default `bridge execute` waits: `ok: true` means a transfer between Base and Polygon filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
 
 - `BRIDGE_FAILED`: the cross-chain bridge failed. The envelope says whether the funds were refunded on the origin chain.
-- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. Poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope.
+- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. For a transfer between Base and Polygon, poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope. For a `*-to-hyperliquid` transfer, follow it as described below instead.
 - `SWAP_UNCONFIRMED`: a same-chain swap on Polygon was submitted but not confirmed within the wait window. There is no bridge to poll. Look up the `txHash` from the envelope on a Polygon block explorer, or run `balance --chain polygon` until the USDC and USDC.e balances reflect the swap.
+
+A `*-to-hyperliquid` transfer is confirmed only by your Hyperliquid balance. `bridge status` cannot see delivery into Hyperliquid, so neither it nor `ok: true` from `bridge execute` proves the USDC arrived. After `bridge execute` returns, whether `ok: true` or `BRIDGE_PENDING`, run `perps positions --json` until `withdrawableUsd` has grown by the amount, less fees; delivery can take up to about ten minutes. If it has not arrived after that, check the origin `txHash` on a Base or Polygon block explorer rather than running `bridge execute` again.
 
 ```bash
 miramarket-cli bridge quote --amount 100 --direction base-to-polygon --json

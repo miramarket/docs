@@ -67,8 +67,9 @@ For a short, a stop-loss is a price **above** where you entered. For a long, it 
 
 - **Minimum order.** Each perp order needs at least `$10` of position size: the amount times the leverage. A branch that would open less than that is skipped and no order is placed. Raise the allocation or the leverage. Closing a whole position is exempt.
 - **Funding.** While a position is open, it pays or receives funding every hour. When the funding rate is positive, longs pay shorts; when negative, shorts pay longs. On a position held for days, funding can add up to more than the price move.
-- **Liquidation.** If the price moves against you by roughly `1 ÷ leverage` (about 33% at `3x`, 10% at `10x`), the exchange closes the position and most or all of its margin is lost. A stop-loss set beyond that point never runs.
-- **Margin.** A position on a stock, index, commodity, FX, rates, or pre-IPO perp is backed only by its own margin. A crypto perp position is also backed by the rest of your balance on Hyperliquid.
+- **Liquidation.** If the price moves too far against a position, the exchange closes it and the margin backing it is lost. A stop-loss set beyond the liquidation price never runs. How far the price can move depends on the kind of perp:
+  - A stock, index, commodity, FX, rates, or pre-IPO perp is backed only by its own margin. It is liquidated after a move of roughly `1 ÷ leverage` against you: about 33% at `3x`, 10% at `10x`.
+  - A crypto perp shares its margin with the rest of your Hyperliquid balance and your other open crypto perp positions. Its liquidation price depends on all of them, not on leverage alone, so the `1 ÷ leverage` estimate does not apply. A losing crypto position can also draw on that shared balance, not just its own margin. The CLI's `perps positions` command reports each position's actual liquidation price.
 
 ## Money and your Cash
 
