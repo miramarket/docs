@@ -9,18 +9,18 @@ Nodes are the building blocks on your canvas. Conditions decide when a strategy 
 
 ## Node reference
 
-| Node | Type | Use it when | You choose |
-| --- | --- | --- | --- |
-| **Price Condition** | Condition | A market price, ROI, or PnL must reach a threshold. | The metric, comparison, value, and market to watch. |
-| **Time Condition** | Condition | A strategy should continue before close or at a chosen time. | A market and either a before-close offset or date and time. |
-| **Resolution** | Condition | The next step depends on how a market resolves. | The market and the result to follow. |
-| **Buy Market** | Action | You want to buy one selected market side. | A named outcome, `YES` or `NO`, and allocation. |
-| **Wallet** | Action | You want to direct part of the available amount to your wallet destination. | The allocation. |
-| **Hold** | Action | You want to keep the current market position open or leave funds in the wallet. | The allocation and what you want to hold. |
+| Node | Type | Where to find it | Use it when | You choose |
+| --- | --- | --- | --- | --- |
+| **Price Condition** | Condition | **Condition** tab | A market, stock, or perp price must reach a threshold. | The metric, comparison, value, and market to watch. |
+| **Time Condition** | Condition | **Condition** tab | A strategy should continue before close or at a chosen time. | A market and either a before-close offset or date and time. |
+| **Resolution** | Condition | **Condition** tab | The next step depends on how a market resolves. | The market and the result to follow. |
+| Market action | Action | **Market** tab | You want to buy a market side, a stock, or open a perp position. | The outcome and `YES` or `NO`, the stock, or the perp and `LONG` or `SHORT`, plus the allocation. |
+| **Exit** | Action | **Condition** tab, under **Utils** | You want to move funds out of a position and back to your wallet. | The allocation. |
+| **Hold** | Action | **Condition** tab, under **Utils** | You want to keep the current market position open or leave funds where they are. | The allocation and what you want to hold. |
 
 ## Start and continue
 
-You can start with a condition when you want to wait for a rule, or start with a market action when you want to enter immediately. Add a market, Wallet, or Hold action after a condition. Add another condition below a market action or Hold when the strategy should check a later rule.
+You can start with a condition when you want to wait for a rule, or start with a market action when you want to enter immediately. Add a market action, **Exit**, or **Hold** after a condition. Add another condition below a market action or **Hold** when the strategy should check a later rule.
 
 When one condition leads to several actions, those actions share the available amount. Their allocations must total `100%`.
 
@@ -31,6 +31,7 @@ When one condition leads to several actions, those actions share the available a
 | If you want to... | Use | Example |
 | --- | --- | --- |
 | Wait for a side to reach a threshold | **Price Condition** | "When `YES` is above `60¢`, buy." |
+| Wait for a stock or perp price | **Price Condition** | "When BTC is below `$80,000`, exit." |
 | Wait until shortly before close | **Time Condition** | "Ten minutes before close, continue." |
 | Wait for a final result | **Resolution** | "If the selected outcome resolves `YES`, follow this path." |
 
@@ -42,11 +43,13 @@ Read [Conditions](/strategy-builder/conditions) for setup details.
 
 | If you want to... | Use | Example |
 | --- | --- | --- |
-| Enter a prediction-market position | **Buy Market** | "Buy `YES` on the selected outcome." |
-| Reserve part of a split | **Wallet** | "Send 30% to Wallet." |
+| Enter a prediction-market position | Market action | "Buy `YES` on the selected outcome." |
+| Buy a tokenized stock | Market action | "Buy TSLA." |
+| Go long or short on a perp | Market action | "Open a `SHORT` on ETH at `3x`." |
+| Take money out of a position | **Exit** | "Exit 50% when the price reaches `75¢`." |
 | Keep exposure instead of changing it | **Hold** | "Keep 50% in the current market." |
 
-Read [Actions](/strategy-builder/actions) for allocation and continuation examples.
+Read [Actions](/strategy-builder/actions) for allocation and continuation examples, and [Perps](/strategy-builder/perps) for leverage.
 
 ## Read the canvas
 

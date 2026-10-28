@@ -18,7 +18,8 @@
             "pages": [
               "index",
               "quickstart",
-              "strategy-builder/templates",
+              "strategy-builder/assistant",
+              "strategy-builder/featured-strategies",
               "strategy-builder/overview",
               "referrals"
             ]
@@ -28,6 +29,7 @@
             "pages": [
               "strategy-builder/nodes",
               "strategy-builder/markets",
+              "strategy-builder/perps",
               "strategy-builder/conditions",
               "strategy-builder/actions",
               "strategy-builder/recurring-markets"
@@ -123,6 +125,11 @@
     {
       "source": "/strategy-builder/run-demo-live",
       "destination": "/strategy-builder/run-simulation-live",
+      "permanent": true
+    },
+    {
+      "source": "/strategy-builder/templates",
+      "destination": "/strategy-builder/assistant",
       "permanent": true
     }
   ]

@@ -1,9 +1,15 @@
 ---
 title: "Miramarket"
-description: "Build, test, and review prediction market strategies with Miramarket."
+description: "Build, test, and run trading strategies across prediction markets, tokenized stocks, and perps with Miramarket."
 ---
 
-Miramarket helps you build prediction market strategies without writing code. A strategy combines a market, a condition, and one or more actions on a visual canvas. Polymarket is the currently supported venue.
+Miramarket helps you build trading strategies without writing code. A strategy combines markets, conditions, and actions on a visual canvas, or you can describe one in plain English and let the strategy assistant build it.
+
+A strategy can trade:
+
+- Prediction markets on Polymarket, the currently supported prediction market venue.
+- Tokenized stocks on Base, such as Tesla, NVIDIA, and Apple.
+- Perps (perpetual futures) on Hyperliquid, long or short, with optional leverage.
 
 The live builder and **Run Live** are available. Start with **Simulate**, which runs a strategy without placing real trades. Use **Run Live** only after you understand every node and are prepared to risk funds. Execution and fills are not guaranteed.
 
@@ -12,27 +18,29 @@ The live builder and **Run Live** are available. Start with **Simulate**, which 
 | If you want to... | Read |
 | --- | --- |
 | Build a first strategy and test it safely | [Build your first strategy](/quickstart) |
-| Start from a ready-made strategy | [Strategy templates](/strategy-builder/templates) |
+| Describe a strategy, or a news situation, in plain English | [Strategy assistant](/strategy-builder/assistant) |
+| Open and run a ready-made strategy | [Home page and featured strategies](/strategy-builder/featured-strategies) |
 | Understand the workspace before building | [Strategy builder overview](/strategy-builder/overview) |
 | Choose a market and its `YES` or `NO` side | [Markets and outcomes](/strategy-builder/markets) |
+| Go long or short on a perp, with leverage | [Perps](/strategy-builder/perps) |
 | Learn price, time, and resolution rules | [Conditions](/strategy-builder/conditions) |
-| Learn every action in the **Market** tab | [Actions](/strategy-builder/actions) |
+| Learn every action, including **Exit** and **Hold** | [Actions](/strategy-builder/actions) |
 | Compare simulation and **Run Live** | [Simulation and Live Runs](/strategy-builder/run-simulation-live) |
 | Earn a share of fees from people you refer | [Referrals](/referrals) |
 
 ## How a strategy works
 
-1. Choose a market and the side you want to buy, such as `YES` or `NO`.
+1. Choose a market and the side you want, such as `YES` or `NO`, or `LONG` or `SHORT` for a perp.
 2. Add a condition that decides when the strategy should continue.
-3. Add an action, such as buying a market outcome, using **Hold**, or moving funds to **Wallet**.
+3. Add an action, such as buying a market outcome, **Exit**, or **Hold**.
 4. Review the canvas, then use **Simulate** before considering **Run Live**.
 
 ## Open the app
 
-Use the live builder at [app.miramarket.org](https://app.miramarket.org).
+The app is at [app.miramarket.org](https://app.miramarket.org). It opens on the home page, where you can ask the strategy assistant for a strategy or open a featured one. Choose **Builder** in the top bar to open the canvas at `app.miramarket.org/builder`.
 
 Signing in sets up your Miramarket account. Adding funds does not start a live run; you must separately choose and confirm **Run Live**.
 
 Use the website at [miramarket.org](https://miramarket.org) to learn what Miramarket does and launch the app.
 
-Prediction markets involve risk. Miramarket is not financial, investment, legal, or tax advice.
+Trading prediction markets, tokenized stocks, and perps involves risk, and leverage can magnify losses. Miramarket is not financial, investment, legal, or tax advice.

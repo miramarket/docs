@@ -5,7 +5,7 @@ description: "Start with simple strategy patterns and test each one with Simulat
 
 These examples are starting points, not recommendations. Replace each market and threshold with values you understand, then use **Simulate**. Each sequence is read from left to right or top to bottom on the canvas.
 
-Several of these patterns are also available as one-click [strategy templates](/strategy-builder/templates) in the builder, so you do not have to add every node by hand.
+You can also describe any of these patterns to the [strategy assistant](/strategy-builder/assistant), so you do not have to add every node by hand.
 
 <img src="/images/tutorial/simple-strategy-canvas.png" alt="Simple price condition followed by a market action on the strategy canvas" />
 
@@ -13,10 +13,11 @@ Several of these patterns are also available as one-click [strategy templates](/
 | --- | --- |
 | Wait for one price | [Wait for a price threshold](#wait-for-a-price-threshold) |
 | Act at a planned time | [Act at a time](#act-at-a-time) |
-| Divide an amount | [Split between a market and Wallet](#split-between-a-market-and-wallet) |
+| Divide an amount | [Split between a market and Exit](#split-between-a-market-and-exit) |
 | Keep a position open | [Hold before another check](#hold-before-another-check) |
 | Use a final result | [Continue after resolution](#continue-after-resolution) |
 | Choose from grouped outcomes | [Choose a grouped event outcome](#choose-a-grouped-event-outcome) |
+| Trade a perp with a stop-loss | [Go long on a perp with a stop-loss](#go-long-on-a-perp-with-a-stop-loss) |
 
 ## Wait for a price threshold
 
@@ -54,13 +55,13 @@ Use this when the timing of a market matters.
 
 Plain meaning: the strategy waits until the configured time rule is met before continuing.
 
-## Split between a market and Wallet
+## Split between a market and Exit
 
 Use this when one condition should direct the available amount to more than one action.
 
 1. Add a condition.
-2. Add a market action and **Wallet** after that condition.
-3. Set allocations, such as 70% to a market action and 30% to **Wallet**.
+2. Add a market action and **Exit** after that condition.
+3. Set allocations, such as 70% to a market action and 30% to **Exit**.
 4. Confirm the total is `100%`.
 5. Run a simulation.
 
@@ -69,9 +70,7 @@ Plain meaning: when the condition is met, the strategy divides the available amo
 | Action | Allocation | Meaning |
 | --- | --- | --- |
 | Buy selected market side | `70%` | Put most of the available amount into the chosen market position. |
-| Wallet | `30%` | Direct the remaining amount to Wallet. |
-
-<img src="/images/tutorial/wallet-action.png" alt="Wallet action available from the Market tab" />
+| Exit | `30%` | Keep the remaining amount in your wallet. |
 
 ## Hold before another check
 
@@ -80,7 +79,7 @@ Use this when you want to keep a market position open and wait for a later rule.
 1. Add a market action for the side you want to hold.
 2. Add a **Time Condition** or **Price Condition** below that action.
 3. Add **Hold** after the later condition.
-4. Confirm Hold keeps the position or wallet allocation you expect.
+4. Confirm Hold keeps the position or amount you expect.
 5. Run a simulation.
 
 Plain meaning: the strategy enters a position, waits for another rule, and keeps the selected allocation rather than changing it.
@@ -122,10 +121,22 @@ Use this for a repeated market family, such as a short time-window market.
 
 Plain meaning: the strategy uses the recurring market family and refreshes its selected market as the family changes.
 
+## Go long on a perp with a stop-loss
+
+Use this when you want a leveraged position that closes itself if the price falls too far.
+
+1. Open **Market**, choose **Perps**, and find the perp, such as `ETH`.
+2. Click the card to add a `LONG` action, then set its leverage, such as `2x`.
+3. Add a **Price Condition** below the action that watches the same perp, with "less than" and a dollar price below your entry.
+4. Add **Exit** after that condition with a `100%` allocation.
+5. Run a simulation.
+
+Plain meaning: the strategy opens a long position and closes it if the price falls to your stop. Keep the stop well inside the liquidation distance, roughly `1 ÷ leverage` from your entry, or the exchange may close the position first. For a `SHORT`, set the stop with "greater than" at a price above your entry. See [Perps](/strategy-builder/perps).
+
 ## Before every simulation
 
 1. Read each market question and resolution rule.
-2. Confirm every named outcome and `YES` or `NO` side.
+2. Confirm every named outcome and `YES` or `NO` side, and every perp's `LONG` or `SHORT` side and leverage.
 3. Confirm every price, time, or result rule.
 4. Confirm allocations in every split total `100%`.
 5. Confirm every condition that should move funds has a follow-up action.

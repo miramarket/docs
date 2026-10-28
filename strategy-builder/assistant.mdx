@@ -1,0 +1,71 @@
+---
+title: "Strategy assistant"
+description: "Describe a strategy in plain English, or a news situation, and let Miramarket build it for you."
+---
+
+The strategy assistant builds a strategy from a plain-English description. It is the chatbox in the middle of the [home page](/strategy-builder/featured-strategies) and of an empty canvas in the [builder](/strategy-builder/overview). Once the canvas has nodes, it sits along the bottom edge of the canvas.
+
+Sign in to use the assistant. A strategy it builds is a starting point: review it like any other strategy and use **Simulate** before **Run Live**.
+
+## Describe a strategy
+
+Type what you want the strategy to do, then press **Send**. Name the market, the side, and the prices or times that matter:
+
+- "Buy `YES` on the Fed cutting rates in December if it drops below 40¢, sell everything at 70¢."
+- "Buy TSLA if it crosses $400 and sell at $450."
+- "Go 3x long on ETH and close it if it falls below $3,500."
+
+The chatbox suggests a few sample prompts to start from. Click one to send it.
+
+The assistant keeps strategies simple unless you ask for more: a few conditions and up to two markets. Ask for a detailed or hedged strategy if you want more steps. When you name the position yourself, it adds only the exits you asked for.
+
+## Describe a situation instead
+
+You do not have to choose the market yourself. Describe a news situation or an event, such as "build a strategy around this week's Fed meeting", and the assistant researches it first:
+
+1. It reads recent news about the situation. One headline at a time appears under the progress line, with its source.
+2. It finds the markets the situation could move.
+3. It designs a strategy from what it read.
+
+Its reply is two sentences: why it chose these markets, then what the strategy does. Check that the reasoning matches your view of the situation before you run it.
+
+## Answer its questions
+
+When a request could mean several markets, the assistant asks which one you meant. It shows the candidate markets grouped by event, or the different ways it could read your request. Select one and click **Confirm**.
+
+If something is missing, such as a price or a side, it asks for it instead of guessing. Reply in the chatbox.
+
+## Edit or explain the current strategy
+
+Once a strategy exists, use the same chatbox to change it or ask about it:
+
+- "Also sell everything below 30¢."
+- **Explain this strategy in plain English**
+- **What are the main risks here?**
+- **Why would this lose money?**
+
+The last three are offered as suggestions once a strategy exists.
+
+## Use the strategy it builds
+
+A built strategy appears in the conversation under **Strategy created**, drawn as a small graph of its first steps. Click **+N more steps** to see the rest.
+
+- **Amount**: type to change how much the strategy starts with.
+- **Run control**: **Simulate**, or **Run Live** from its menu, runs the strategy from the conversation.
+- **The steps**: click them to open the strategy on the canvas, where you can review and edit every node.
+
+Opening a generated strategy on the canvas replaces what is there. You can undo it. While a run is active on the canvas, the canvas is locked and a generated strategy cannot replace it.
+
+## Languages
+
+Write in English for the most reliable results. If you write in Korean, Japanese, Chinese, Russian, or Arabic, the assistant replies in that language.
+
+## Before you run
+
+The assistant builds what it understood, not necessarily what you meant. Before any run:
+
+- Confirm every market, named outcome, and side, or `LONG` or `SHORT` for a [perp](/strategy-builder/perps).
+- Check every threshold, time, and allocation.
+- Use **Simulate** first, then the [live-run checklist](/strategy-builder/validation) before **Run Live**.
+
+Execution and fills are not guaranteed.

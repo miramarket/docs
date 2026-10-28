@@ -15,7 +15,7 @@
         "@type": "HowToStep",
         "name": "Choose a market",
         "text":
-          "Open the Market tab and use Trending, a category filter, or search to find a market. If the card has more than one named outcome, select the outcome first, then choose YES or NO for it."
+          "Open the builder at app.miramarket.org/builder, open the Market tab, and under Prediction Markets use Trending, a category, or search to find a market. If the card has more than one named outcome, select the outcome first, then choose YES or NO for it."
       },
       {
         "@type": "HowToStep",
@@ -33,7 +33,7 @@
         "@type": "HowToStep",
         "name": "Simulate the strategy",
         "text":
-          "Click Simulate to validate the strategy and start a simulated run without placing real trades."
+          "Sign in, then click Simulate to validate the strategy and start a simulated run without placing real trades."
       }
     ]
   };
