@@ -1,13 +1,13 @@
 ---
-title: "Build Polymarket strategies with an AI agent"
-description: "How an AI agent creates, validates, and runs automated Polymarket trading strategies using the Miramarket CLI — the JSON format, and the rules a validator can't check for you."
+title: "Build trading strategies with an AI agent"
+description: "How an AI agent creates, validates, and runs automated strategies on Polymarket, tokenized stocks, and Hyperliquid perps using the Miramarket CLI — the JSON format, and the rules a validator can't check for you."
 ---
 
-Miramarket lets you build a conditional trading strategy for Polymarket, the supported prediction market venue, and for tokenized stocks on Base, a separate non-prediction-market asset — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli.md), without a human describing it turn-by-turn through a chat interface.
+Miramarket lets you build a conditional trading strategy for Polymarket, the supported prediction market venue, for tokenized stocks on Base, and for perpetual futures (perps) on Hyperliquid — a graph of price/time conditions and buy, sell, hold, and withdraw actions — and run it automatically. Stocks and perps are not prediction markets: both are priced in dollars, and perps can be long or short with leverage. This page is for an AI agent (or a developer building one) that wants to construct and post a strategy directly, using the [CLI](/cli.md), without a human describing it turn-by-turn through a chat interface.
 
 An agent capable of understanding a request like *"buy YES if this market crosses above 60%, take half profit at 75% and let the rest ride to 90%"* can construct the strategy JSON for that directly from the format and rules below. It can also hand the request to `miramarket-cli strategies generate "<request>" --out ./strategy.json --json`, which runs the same text-to-strategy pipeline as the web assistant and applies every rule on this page; the agent then validates, previews, and posts the file it gets back (see [the recommended loop](#the-recommended-loop)). The one thing worth knowing up front: **most of the mistakes below are not caught by `validate`.** `validate` only checks that the JSON is structurally well-formed — it has no notion of your intent, so a strategy can validate cleanly, post cleanly, and still silently do the wrong thing (most often: deploy $0 into a leg, or set up a condition that can never fire as intended). The rules in this guide exist specifically to prevent that.
 
-Prediction markets involve risk. Posting a strategy with `--demo` simulates it with no real funds; posting live spends real capital. Miramarket is not financial, investment, legal, or tax advice.
+Trading involves risk, and leverage magnifies losses. Posting a strategy with `--demo` simulates it with no real funds; posting live spends real capital. Miramarket is not financial, investment, legal, or tax advice.
 
 ## Before you start
 
@@ -45,10 +45,10 @@ A **CONDITION** node watches a market and fires when a signal crosses a threshol
 
 ```ts
 {
-  watch: { venue: "POLYMARKET" | "BASE_STOCKS", market_id: string, outcome_token: "YES" | "NO" | "LONG", token_id?: string };
+  watch: { venue: "POLYMARKET" | "BASE_STOCKS" | "HYPERLIQUID", market_id: string, outcome_token: "YES" | "NO" | "LONG" | "SHORT", token_id?: string };
   signal: "IMPLIED_PROBABILITY" | "PRICE_USD" | "ROI_PCT" | "PNL_USD" | "TIME_SINCE_GROUP_SECONDS" | "TIME_TO_RESOLUTION_SECONDS";
   trigger: "CROSS_ABOVE" | "CROSS_BELOW";
-  threshold: number;   // 0–1 for IMPLIED_PROBABILITY; dollars per share for PRICE_USD
+  threshold: number;   // 0–1 for IMPLIED_PROBABILITY; dollars for PRICE_USD (per share for a stock, mark price for a perp)
 }
 ```
 
@@ -58,9 +58,16 @@ An **ACTION** node does something with capital:
 {
   action_type: "BUY_MARKET_OUTCOME" | "SELL_MARKET_OUTCOME" | "HOLD" | "MOVE_TO_WALLET";
   allocation_pct?: number;   // required when the decision group is SPLIT_100
-  target: { venue?: "POLYMARKET" | "BASE_STOCKS", market?: { market_id: string, outcome_token: string, token_id: string } };
+  target: {
+    venue?: "POLYMARKET" | "BASE_STOCKS" | "HYPERLIQUID",
+    market?: { market_id: string, outcome_token: string, token_id: string },
+    leverage?: number;       // HYPERLIQUID only: integer 1–50, default 1
+  };
+  whole_position?: boolean;  // MOVE_TO_WALLET only
 }
 ```
+
+`whole_position: true` on a `MOVE_TO_WALLET` sells `allocation_pct` of every buy of that market the run holds (each tier of an entry ladder is its own buy), not only the buy the exit is chained under. Hang a ladder's exits under its first buy with this set.
 
 An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITION` only). A **decision group** links one CONDITION to the one or more ACTIONs it fires — `SINGLE` mode for exactly one action, `SPLIT_100` mode for multiple actions whose `allocation_pct` values sum to 100.
 
@@ -90,17 +97,17 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 
 **10. Watch unit scale.** ROI-flavored percentages are whole numbers (`18` means +18%, not `0.18`). Probability thresholds (`IMPLIED_PROBABILITY`) are `0`–`1`. A value like `0.18` on a field that expects a whole-number percent is almost always a scale mistake.
 
-**11. Polymarket's CLOB has a $1 minimum per order.** Any leaf allocation that resolves to less than $1 of the strategy's principal is rejected when you post — `validate` won't catch this, since it depends on `initial_principal_usd` and the full allocation chain.
+**11. Every venue has a minimum order.** Polymarket's CLOB takes at least $1 per order: any leaf allocation that resolves to less than $1 of the strategy's principal is rejected when you post. A Hyperliquid perp order needs at least $10 of position size (margin times leverage), checked when the order is placed. `validate` catches neither, since both depend on `initial_principal_usd` and the full allocation chain.
 
 **12. Structural limits.** Up to 24 stages, up to 4 actions per decision group, a practical ceiling of 4 distinct markets per strategy, and a 500 KB / 500-node cap at posting time.
 
 **13. A "gated entry, then a genuine partial exit" has no shortcut — hand-chain it.** There's no single field for "enter when X, then take partial profit at Y, leaving the rest running." Build it explicitly as `[MOVE_TO_WALLET x%, HOLD (100-x)%]` pairs, per rule 1, chained off the entry's own condition.
 
-**14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as token swaps, not as Polymarket orders, and are watched through the share's reference price feed. Three consequences:
+**14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as token swaps, not as Polymarket orders, and are watched through the share's reference price feed — or, for a stock with no feed yet (MUc, PLTRc), the pool's 15-minute average price. `stocks show` reports which as `conditionPriceSource`. Three consequences:
 
 - A condition watching a stock uses `signal: "PRICE_USD"` with the threshold in dollars per share: `"threshold": 400` means $400.00. `validate` rejects `IMPLIED_PROBABILITY` on a stock watch, `PRICE_USD` on a prediction market, and a non-positive dollar threshold. "If TSLA crosses $400, buy it" is `{ watch: <TSLAc>, signal: "PRICE_USD", trigger: "CROSS_ABOVE", threshold: 400 }`.
 - A stock never resolves. `TIME_TO_RESOLUTION_SECONDS` on a stock watch is rejected; use `PRICE_USD` or an absolute time. A stock leg with no exit condition is sold when the strategy finishes.
-- Its price is dollars per share, not a 0–1 probability. Never apply rule 3's 3¢/97¢ sanity check to it. The condition watches the *reference* price (what the share is worth); the pool price `stocks show` reports is what a swap pays, typically a fraction of a percent above it.
+- Its price is dollars per share, not a 0–1 probability. Never apply rule 3's 3¢/97¢ sanity check to it. Where there is a feed, the condition watches the *reference* price (what the share is worth); the pool price `stocks show` reports is what a swap pays, typically a fraction of a percent above it. Where there is not, the condition watches the pool's 15-minute average, which trails the pool price after a fast move.
 
 The node shape is fixed: `venue: "BASE_STOCKS"`, `market_id` **and** `token_id` both the token's contract address, `outcome_token: "LONG"` (single-sided — you own the share or you don't). Take it from the CLI rather than assembling it:
 
@@ -111,6 +118,28 @@ miramarket-cli stocks history TSLA --range 1M --json       # pool price history,
 ```
 
 Three registry tokens (COINc, CRCLc, INTCc) have no pool and cannot be traded; `stocks show` says so by name instead of reporting them as unknown. Tokenized stocks are geo-restricted: where they are not offered, a live `post` of a strategy that buys one is refused with "Tokenized stocks are not available in your region" (exit `4`). `account status --json` shows the region check under `checks.geo`.
+
+**15. A perp is a leveraged dollar position with two sides, not a market that resolves.** `HYPERLIQUID` legs are USDC-margined perpetuals on Hyperliquid, watched by their **mark price in dollars**. There are two kinds: perps on Hyperliquid's main dex (crypto: BTC, ETH, SOL; cross margin), and HIP-3 perps listed by other providers on the `xyz`, `para`, `io`, and `mkts` dexes (stocks, indices, commodities, FX, rates, and pre-IPO names such as `xyz:NVDA` or `para:10Y`; always isolated margin). Consequences:
+
+- **Units are dollars of mark price.** A condition on a perp uses `signal: "PRICE_USD"` with the threshold in dollars (`"threshold": 82000` means $82,000). `validate` rejects `IMPLIED_PROBABILITY` on a perp watch. Never apply rule 3's 3¢/97¢ check to a perp price.
+- **The side is `LONG` or `SHORT`, and both are real trades.** A `SHORT` profits when the mark falls; there is no `YES`/`NO`. A `SHORT` is not "the NO side" of a `LONG`: opposite sides of the same perp in one strategy net against each other on the exchange, and opening one while the other is held is refused. An exit (`MOVE_TO_WALLET`) closes whichever side is open.
+- **`leverage` lives on `action.target`, is an integer, and defaults to 1.** `validate` enforces 1–50; the exchange enforces the asset's own `maxLeverage` (`perps show` reports it, and refuses `--leverage` above it). Leverage scales exposure, not capital: `allocation_pct` is still the share of capital posted as margin. A 3x long with $100 of margin holds $300 of the asset.
+- **Liquidation fires before your exit does.** A stop authored beyond the position's liquidation price never runs. For a `SHORT`, a stop is a `CROSS_ABOVE` above the entry; for a `LONG`, a `CROSS_BELOW` below it.
+- **How far liquidation is depends on the margin mode.** A HIP-3 position is isolated: only the margin posted for it backs it, so it is force-closed when the mark moves roughly `1 / leverage` against it (less, after fees and funding). A main-dex position is cross margin: the whole main-dex balance and every other cross position back it together, so its liquidation price depends on all of them, not on leverage alone, and a losing position can draw down that shared balance, not just its own margin. Never derive a cross position's liquidation from leverage; read `liquidationPx` from `perps positions` after entry and keep stops inside it. For a HIP-3 leg, the run moves margin onto the dex before the order and back after the close; you author nothing for it.
+- **Funding is a running cost.** The hourly `funding` rate `perps show` reports is paid by longs to shorts when positive (the reverse when negative) for every hour the position is open. A leveraged position held for days can lose more to funding than to price.
+- **A perp never resolves.** `TIME_TO_RESOLUTION_SECONDS` on a perp watch is rejected; use `PRICE_USD` or an absolute time. A perp leg with no exit condition is closed when the strategy finishes.
+
+The node shape is fixed: `venue: "HYPERLIQUID"`, `market_id` **and** `token_id` both `hl:<COIN>` on the main dex (`hl:BTC`) or `hl:<dex>:<COIN>` on a HIP-3 dex (`hl:xyz:NVDA`) — never a bare `BTC` — with `outcome_token: "LONG" | "SHORT"` and an optional integer `leverage` beside `market`. Coins are case-sensitive (`hl:kPEPE`): copy the id `perps list` prints, never upper-case it. Take the block from the CLI:
+
+```bash
+miramarket-cli perps list --category stocks --json                    # catalog; --dex xyz|para|io|mkts|main narrows by dex
+miramarket-cli perps show ETH --side SHORT --leverage 3 --json | jq .actionTarget
+miramarket-cli perps show xyz:NVDA --leverage 2 --json | jq .actionTarget   # a HIP-3 perp
+miramarket-cli perps history ETH --interval 4h --json                 # mark-price candles, dollars
+miramarket-cli perps positions --json                                 # open positions, liquidationPx, free balance
+```
+
+A strategy funds its perp legs itself: posting one moves USDC to Hyperliquid on demand. Hyperliquid perps are not available in some regions, including the United States; there, a live `post` of a strategy that opens a perp position is refused with "Hyperliquid perps are not available in your region" (exit `4`).
 
 ## Worked examples
 
@@ -332,6 +361,58 @@ Both actions fire together when the shared condition fires — this is one decis
 }
 ```
 
+### Short a perp with leverage, stop on its own price (rules 9, 15)
+
+Open a 3x short on ETH, then close it if the mark price rises above $4,200. The stop watches the same perp in dollars and sits above the entry because the position is short. Take the target block from `miramarket-cli perps show ETH --side SHORT --leverage 3 --json`.
+
+```json
+{
+  "version": "1.1.0",
+  "strategy_id": "eth-short-3x",
+  "initial_principal_usd": 100,
+  "root_node_id": "act_entry",
+  "nodes": [
+    {
+      "node_id": "act_entry",
+      "type": "ACTION",
+      "level": 0,
+      "action": {
+        "action_type": "BUY_MARKET_OUTCOME",
+        "allocation_pct": 100,
+        "target": {
+          "venue": "HYPERLIQUID",
+          "market": { "market_id": "hl:ETH", "outcome_token": "SHORT", "token_id": "hl:ETH" },
+          "leverage": 3
+        }
+      }
+    },
+    {
+      "node_id": "cond_stop",
+      "type": "CONDITION",
+      "level": 1,
+      "condition": {
+        "watch": { "venue": "HYPERLIQUID", "market_id": "hl:ETH", "outcome_token": "SHORT", "token_id": "hl:ETH" },
+        "signal": "PRICE_USD",
+        "trigger": "CROSS_ABOVE",
+        "threshold": 4200
+      }
+    },
+    {
+      "node_id": "act_close",
+      "type": "ACTION",
+      "level": 1,
+      "action": { "action_type": "MOVE_TO_WALLET", "allocation_pct": 100, "target": {} }
+    }
+  ],
+  "edges": [
+    { "edge_id": "e1", "from_node_id": "act_entry", "to_node_id": "cond_stop" }
+  ],
+  "decision_groups": [
+    { "group_id": "g1", "condition_node_id": "cond_stop", "action_node_ids": ["act_close"], "level": 1, "mode": "SINGLE" }
+  ]
+}
+```
+
 ## The recommended loop
 
 ```bash
@@ -398,7 +479,10 @@ Rules that apply on top of the ones above:
 - **Not re-validating after editing.** `edit` always exits `0` even when the result fails validation — check `valid` and `errors` in its envelope.
 - **Editing the local file when you meant the posted strategy.** `edit` never reaches the server. A running strategy changes only through `strategies pull` and `strategies update`, and only in its future nodes.
 - **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; any `ROI_PCT`/`PNL_USD` signal is also flagged there.
-- **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — `POLYMARKET` and `BASE_STOCKS` are the tradeable venues.
-- **Treating a stock's price as a probability.** `stocks show` and `stocks history` report dollars per share. A `BASE_STOCKS` condition uses `PRICE_USD` with a dollar threshold (rule 14), never `IMPLIED_PROBABILITY`.
+- **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — `POLYMARKET`, `BASE_STOCKS`, and `HYPERLIQUID` are the tradeable venues.
+- **Treating a stock's or perp's price as a probability.** `stocks show`, `stocks history`, `perps show`, and `perps history` report dollars. A `BASE_STOCKS` or `HYPERLIQUID` condition uses `PRICE_USD` with a dollar threshold (rules 14 and 15), never `IMPLIED_PROBABILITY`.
+- **Upper-casing or hand-typing a perp id.** Copy `hl:<COIN>` or `hl:<dex>:<COIN>` exactly as `perps list` prints it, or take the whole block from `perps show`.
+- **Placing a perp stop beyond liquidation.** A stop past the position's liquidation price never fires; the exchange closes the position first. `1 / leverage` estimates that distance only for isolated (HIP-3) positions; for a cross-margin main-dex position, read `liquidationPx` from `perps positions` (rule 15).
+- **Treating `strategies generate` `thesis` as a guarantee.** When a prompt described a situation instead of a position, the generator researched the news and chose the markets; `thesis` explains why. Read it, and the markets it picked, before posting.
 - **Treating `strategies generate` exit `0` as "built".** `ok` is `true` for all four `result` values. Only `strategy` wrote a file; `market_selection` is answered with `--choose`, and re-sending the prompt starts over.
 - **Hand-rolling a polling loop for a run's status.** Use `strategies watch`, which has terminal-status detection and a timeout built in.

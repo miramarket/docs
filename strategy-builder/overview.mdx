@@ -3,23 +3,28 @@ title: "Strategy builder overview"
 description: "Learn how the Miramarket workspace and strategy canvas fit together."
 ---
 
-The live strategy builder is available at [app.miramarket.org](https://app.miramarket.org). It lets you create a strategy visually for Polymarket, the currently supported venue. Choose nodes in the left panel, then click to add them or drag them onto the canvas.
+The live strategy builder is at [app.miramarket.org/builder](https://app.miramarket.org/builder). Choose **Builder** in the top bar to open it from anywhere in the app. It lets you create a strategy visually from Polymarket prediction markets, tokenized stocks, and perps. Choose nodes in the left panel, then click to add them or drag them onto the canvas, or describe the strategy to the [strategy assistant](/strategy-builder/assistant).
 
-<img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the top bar, market panel, and canvas shown" />
+<img src="/images/tutorial/builder-overview.png" alt="Miramarket strategy builder with the market panel and canvas shown" />
 
 ## Main areas
 
 | Area | What it does |
 | --- | --- |
-| Top bar | Starts a new draft, shares a link, runs a simulation, opens run options, and signs you in. |
+| Top bar | **Builder**, **Strategies**, and **How it works**, plus **Sign in** or your account menu. The logo returns to the [home page](/strategy-builder/featured-strategies). |
 | Left panel | Switch between **Condition** and **Market** to find nodes. |
 | Canvas | Shows the nodes and their order in the strategy. |
+| Canvas, top left | The starting amount, from `$5` to `$10,000`, and the run control: **Simulate**, or **Run Live** from its menu. |
+| Canvas, top right | **New Strategy** starts a fresh draft, **Share** copies a link to the strategy, and the view switch changes how the strategy is shown. |
+| Assistant | The chatbox in the middle of an empty canvas, or along its bottom edge once the canvas has nodes. |
+
+On a phone, the top bar's menu holds the run control, **New strategy**, and **Share**.
 
 ## Nodes on the canvas
 
-Every strategy starts with a node. A condition checks a rule. A market action buys a selected outcome. **Hold** keeps the current position open. **Wallet** directs funds to the selected wallet destination.
+Every strategy starts with a node. A condition checks a rule. A market action buys a selected outcome, a stock, or a perp position. **Exit** moves funds out of a position and back to your wallet. **Hold** keeps the current position open.
 
-Click a palette card to add it relative to the node you selected. Dragging is useful when you want to place a node before, after, or below another node. The canvas arranges the resulting path for you; you do not need to draw connectors manually.
+Click a palette card to add it relative to the node you selected. Dragging is useful when you want to place a node before, after, or below another node. On a touch screen, press and hold a card, then drag it. The canvas arranges the resulting path for you; you do not need to draw connectors manually.
 
 ## A simple strategy
 
@@ -31,17 +36,24 @@ One action receives a `100%` allocation by default. When a condition has more th
 
 ## Learn every node
 
-Use [Strategy builder nodes](/strategy-builder/nodes) for a complete reference of Price Condition, Time Condition, Resolution, Buy Market, Wallet, and Hold. It also explains how conditions, actions, and allocations fit together.
+Use [Strategy builder nodes](/strategy-builder/nodes) for a complete reference of Price Condition, Time Condition, Resolution, market actions, Exit, and Hold. It also explains how conditions, actions, and allocations fit together.
+
+## Your strategies
+
+Choose **Strategies** in the top bar to see your strategies and their status. Open one to follow its run on the canvas.
+
+While a run is active, the steps that have not run yet can still change. Open the strategy from **Strategies**, select **Edit**, change the future steps, then select **Save changes**. Steps that have already run stay as they are, and so do the settings of a condition the run is waiting on.
 
 ## Build safely
 
-**Run Live** is available. Use **Simulate** first. A live run can use real funds, and execution or fills are not guaranteed. Signing in and adding funds does not start a run. If the canvas has an active run, editing is locked until that run is no longer active.
+**Run Live** is available. Use **Simulate** first. A live run can use real funds, and execution or fills are not guaranteed. Signing in and adding funds does not start a run. If the canvas has an active run, the builder's canvas is locked until that run is no longer active.
 
 ## Continue learning
 
-- [Strategy templates](/strategy-builder/templates)
 - [Build your first strategy](/quickstart)
+- [Strategy assistant](/strategy-builder/assistant)
 - [Strategy builder nodes](/strategy-builder/nodes)
 - [Markets and outcomes](/strategy-builder/markets)
+- [Perps](/strategy-builder/perps)
 - [Conditions](/strategy-builder/conditions)
 - [Actions](/strategy-builder/actions)

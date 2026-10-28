@@ -9,30 +9,41 @@ Use this glossary when a word in the builder is unfamiliar.
 | --- | --- |
 | Action | A node that tells the strategy what to do after a condition continues. |
 | Allocation | The percentage of the available amount assigned to an action. Actions in one split must total `100%`. |
+| Builder | The canvas workspace at `app.miramarket.org/builder`, where you build a strategy node by node. |
 | Canvas | The workspace where strategy nodes and their order appear. |
+| Cash | The money in your account that is not committed to a running strategy, including your free balance on Hyperliquid. |
 | Close time | The time when a market stops accepting activity. It can differ from the time the market resolves. |
 | Condition | A node that checks a price, time, or resolution rule before the strategy continues. |
-| Sign in | The top-bar button used to set up your Miramarket account, required before **Run Live**. Signing in and adding funds does not start a live run. It is different from a Wallet action. |
-| Hold | A Utility action that keeps the current position open and can continue to a child condition. |
-| Market | A prediction market question or a named outcome within a market card. |
-| Market action | An action that buys the selected `YES` or `NO` side of a market outcome. |
-| Miramarket | The product for building and running prediction market strategies. |
+| Exit | A **Utils** action that moves its allocation out of the current position and back to your wallet, for example to take profit or stop a loss. |
+| Featured strategy | A ready-made strategy shown on the home page, usually built around a recent news story. You can open it on the canvas or run it directly. |
+| Funding | A payment between perp longs and shorts every hour while a position is open. |
+| Hold | A **Utils** action that keeps the current position open and can continue to a child condition. |
+| Home page | The page at `app.miramarket.org`, with the strategy assistant's chatbox and featured strategies. |
+| Leverage | A multiplier on a perp position's size. `3x` turns `$100` of margin into a `$300` position, and multiplies gains and losses. |
+| Liquidation | When the exchange closes a leveraged perp position because the price moved too far against it, losing the margin backing it. |
+| `LONG` | The perp side that gains when the price rises. |
+| Market | A prediction market question, a named outcome within a market card, a tokenized stock, or a perp. |
+| Market action | An action that buys the selected `YES` or `NO` side of a market outcome, buys a tokenized stock, or opens a perp position. |
+| Miramarket | The product for building and running trading strategies. |
 | NegRisk market | A grouped event with mutually exclusive named outcomes. Select one named outcome, then choose its `YES` or `NO` side. |
 | Named outcome | A specific option inside a multi-outcome market card, such as a team or person. |
-| New Strategy | The top-bar button that starts a fresh strategy draft. |
+| New Strategy | The canvas button that starts a fresh strategy draft. |
 | Outcome | A possible result or named option in a market. |
+| Perp | A perpetual future on Hyperliquid. It tracks an asset's price in dollars, never expires, and can be traded `LONG` or `SHORT` with leverage. |
 | Polymarket | The prediction market venue currently supported by Miramarket. |
-| Price | The displayed current cost for a selected side, often shown in cents. |
-| Price Condition | A condition that checks a selected market side against a price threshold. |
+| Price | The displayed current cost for a selected side, often shown in cents. Stock and perp prices are in dollars. |
+| Price Condition | A condition that checks a selected market side, stock, or perp against a price threshold. |
 | Recurring market | A market family that repeats on a schedule, such as `5m` or daily. |
 | Resolution | A condition that branches according to a selected market outcome. |
-| Simulate | The top-bar action that starts a simulated run without placing real trades. |
 | Run Live | An available run type that can use real funds. Execution and fills are not guaranteed. |
+| `SHORT` | The perp side that gains when the price falls. |
+| Sign in | The top-bar button used to set up your Miramarket account, required before you run a strategy or use the assistant. Signing in and adding funds does not start a live run. |
+| Simulate | The run control's default, which starts a simulated run without placing real trades. |
 | Strategy | A complete plan made from markets, conditions, and actions. |
-| Strategy builder | The app workspace at `app.miramarket.org`. |
-| Template | A ready-made strategy you can start from instead of building node by node. Some templates apply immediately with markets already chosen; others ask you to fill named market slots. |
+| Strategy assistant | The chatbox that builds, edits, and explains strategies from plain English, and can research a news situation first. |
+| Strategies | The top-bar page that lists your strategies and their runs. |
 | Time Condition | A condition that checks a time before market close or a specific time. |
-| Utility | The **Market** tab section that contains non-market actions such as **Hold**. |
-| Wallet action | An action that directs its allocation to a Wallet destination. |
+| Tokenized stock | A real company share wrapped as a token on Base, such as TSLAc. It is bought and sold in dollars and never resolves. |
+| Utils | The section of the **Condition** tab that holds **Exit** and **Hold**. |
 | `YES` | The side for a selected named outcome happening. |
 | `NO` | The side for a selected named outcome not happening. |

@@ -116,7 +116,7 @@ Read-only. Shows the current Terms/Privacy/Risk Disclosure versions, your accept
 
 ### `miramarket-cli account accept-policies`
 
-Records legal acceptance of the current Terms, Privacy Policy, and Risk Disclosure. This is a human-only action — it requires typing `I accept` in an interactive terminal (or, for a human scripting their own machine, pinning the exact current document versions with `--i-have-read-and-accept --terms-version=... --privacy-version=... --risk-version=...`). An AI agent should never call this on a user's behalf.
+Records legal acceptance of the current Terms, Privacy Policy, and Risk Disclosure. This is a human-only action — it requires typing `I accept` in an interactive terminal (or, for a human scripting their own machine, pinning the exact current document versions with `--i-have-read-and-accept --terms-version=... --privacy-version=... --risk-version=...`). An AI agent should never call this on a user's behalf. When any of the three documents changes, the earlier acceptance no longer counts: `account status` reports `POLICIES_NOT_ACCEPTED` until you accept the new versions.
 
 ### `miramarket-cli account capital [--json]`
 
@@ -124,7 +124,7 @@ Shows capital currently locked by active strategy runs and pending withdrawal ho
 
 ### `miramarket-cli account withdraw --recipient <address> [--amount <usd>] --confirm [--json]`
 
-Withdraws spendable USDC to an external address. Omit `--amount` to withdraw all spendable cash. Requesting more than spendable cash is rejected before anything is moved.
+Withdraws spendable USDC to an external address. Spendable cash is your USDC on Polygon and Base plus your free perps balance on Hyperliquid; the withdrawal moves the Hyperliquid part out when it needs it, and a small transfer fee comes out of the amount. Margin backing open perp positions does not count until they are closed. Omit `--amount` to withdraw all spendable cash. Requesting more than spendable cash is rejected before anything is moved.
 
 ```bash
 miramarket-cli account withdraw --recipient 0xabc... --amount 25 --confirm --json
@@ -153,14 +153,17 @@ Text-to-strategy. Describe what the strategy should do in plain English and get 
 
 `result` is one of four values. `ok` is `true` for all of them, because each is a real outcome rather than a failure:
 
-- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg with `PRICE_USD` conditions in dollars, ready to post.
-- `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question.
+- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), `thesis`, and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg and a [perp](#hyperliquid-perp-commands) as a `HYPERLIQUID` leg, both with `PRICE_USD` conditions in dollars, ready to post.
+
+  `thesis` is set when the prompt asked what to trade about a situation, event, or asset instead of choosing the position ("build a strategy around this week's Fed meeting"). The command researched the news and the markets it moves first, and `thesis` says what the strategy bets on (`bet`), whether it bets with or against the situation (`stance`: `WITH_SITUATION`, `CONTRARIAN`, or `MIXED`), why each market is in it (`legs[]`), what the strategy does (`rules[]`), what would break it (`breaks_if`), the headlines it rests on (`news[]`), and a two-sentence `summary`. Without `--json` the summary prints as a short note. `thesis` is `null` for every other prompt.
+- `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question. A candidate can also be one reading of a vague request rather than a market: it has `outcome` and `venue` set to `OPTION` and its `title` is the reading. Choose it the same way.
 - `clarification` — nothing was built; `question` says what is missing. Re-run with a prompt that answers it.
 - `answer` — the prompt was a question rather than a build request; `answer` is the reply.
 
 ```bash
 miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40c, sell at 70c" --out ./fed.json --json
 miramarket-cli strategies generate "buy TSLA if it crosses \$400, sell at \$450" --out ./tsla.json --json
+miramarket-cli strategies generate "go 3x short on ETH, close it above \$4,200" --out ./eth.json --json
 miramarket-cli strategies generate "also sell everything if it drops below 30c" --strategy ./fed.json --out ./fed.json --json
 miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out ./fed.json --json
 ```
@@ -180,6 +183,7 @@ miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out .
   "notices": [],
   "unmatched": [],
   "changeSummary": [],
+  "thesis": null,
   "nextCommands": [
     "miramarket-cli validate ./tsla.json --json",
     "miramarket-cli preview ./tsla.json --json",
@@ -278,7 +282,7 @@ None of these require authentication.
 
 ## Tokenized stock commands
 
-Tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities wrapped as tokens. They are not prediction markets: a strategy buys and sells them as token swaps, and a condition watches them by **share price in dollars**. `markets search` never finds them, so these commands exist instead. None require authentication.
+Tokenized stocks on Base (AAPLc, TSLAc, NVDAc, PLTRc, MUc, and others) are real equities wrapped as tokens. They are not prediction markets: a strategy buys and sells them as token swaps, and a condition watches them by **share price in dollars**. `markets search` never finds them, so these commands exist instead. None require authentication.
 
 | Command | What it does |
 | --- | --- |
@@ -302,11 +306,12 @@ Tokenized stocks on Base (AAPLc, TSLAc, NVDAc, and others) are real equities wra
     "market": { "market_id": "0xb2000000000000000000001e800a7f5189430cD0", "outcome_token": "LONG", "token_id": "0xb2000000000000000000001e800a7f5189430cD0" }
   },
   "conditionSupported": true,
-  "conditionSignal": "PRICE_USD"
+  "conditionSignal": "PRICE_USD",
+  "conditionPriceSource": "chainlink"
 }
 ```
 
-Two prices appear, and they mean different things. `priceUsd` is the pool price, what a swap actually pays, and what a position is sized from. `oraclePriceUsd` is the reference price of the underlying share, what a `PRICE_USD` condition watches; the gap between them is `poolPremiumBps`. Both are dollars per share, never a 0–1 probability. A large `oracleAgeSeconds` outside US market hours is expected, not a fault.
+Two prices appear, and they mean different things. `priceUsd` is the pool price, what a swap actually pays, and what a position is sized from. `oraclePriceUsd` is the reference price of the underlying share, what a `PRICE_USD` condition watches; the gap between them is `poolPremiumBps`. `conditionPriceSource` says what a condition watches: `chainlink` for the reference price, or `aerodrome_pool_twap` for a stock with no reference feed yet (MUc, PLTRc), whose `oraclePriceUsd` is `null` and whose conditions watch the pool's 15-minute average price instead. Both are dollars per share, never a 0–1 probability. A large `oracleAgeSeconds` outside US market hours is expected, not a fault.
 
 ```json
 {
@@ -328,6 +333,148 @@ Two prices appear, and they mean different things. `priceUsd` is the pool price,
 `stocks history` charts the pool price (`priceSource` names it), not the reference price. `stale: true` means fresh history was unavailable and the last good reading was returned.
 
 `stocks show` and `stocks history` exit `5` for a company that is not in the registry, and, distinctly, for one that is listed but has no pool to trade in yet (COINc, CRCLc, INTCc). `portfolio` reports stock holdings separately from cash (`stockPositions`, `stockValueUsd`), because a share has to be sold before a strategy can spend the proceeds. Tokenized stocks are geo-restricted: where they are not offered, posting a live strategy that buys one is refused with "Tokenized stocks are not available in your region". `account status --json` shows the region check under `checks.geo`.
+
+## Hyperliquid perp commands
+
+Perps are perpetual futures on Hyperliquid, margined in USDC. They are not prediction markets: a perp has two sides, `LONG` and `SHORT`, never resolves, and is priced in **dollars**. A strategy action on a perp may carry an integer `leverage` (default `1x`), and a condition watches a perp by its **mark price in dollars** (`signal: "PRICE_USD"`). Every price these commands print is dollars, never a 0–1 probability.
+
+There are two kinds of perp:
+
+- Perps on Hyperliquid's main dex: crypto such as `BTC`, `ETH`, and `SOL`. Positions are cross margin: your whole main-dex balance and your other cross positions back them together, so a position's liquidation price depends on all of them, not on its leverage alone.
+- HIP-3 perps, listed on Hyperliquid by other providers (the `xyz`, `para`, `io`, and `mkts` dexes): stocks, indices, commodities, FX, rates, and pre-IPO names. Their coin carries the dex (`xyz:NVDA`, `para:10Y`) and their positions are always **isolated** margin: only that position's margin backs it.
+
+Ids are `hl:<COIN>` (`hl:BTC`) or `hl:<dex>:<COIN>` (`hl:xyz:NVDA`), spelled exactly as `perps list` prints them. Coins are case-sensitive (`hl:kPEPE`); never upper-case them.
+
+| Command | Auth | What it does |
+| --- | --- | --- |
+| `perps list [--dex <name>] [--category <class>]` | No | Every perp with its dex, asset class, margin mode, mark price, 24-hour move, hourly funding, leverage cap, and open interest. |
+| `perps show <coin> [--side LONG\|SHORT] [--leverage <n>]` | No | One perp, with the exact `actionTarget` block to paste into an ACTION node. |
+| `perps history <coin> [--interval <interval>] [--from <time>] [--to <time>]` | No | Mark-price candles, oldest first. |
+| `perps positions` | Yes | Your open perp positions on every dex and your free Hyperliquid balance. |
+
+### `perps list`
+
+| Flag | Description |
+| --- | --- |
+| `--dex` | Only one dex: its name (`xyz`, `para`, `io`, `mkts`), its display name, or `main` for Hyperliquid's own dex. Any case. An unknown dex exits `5` and names the valid ones. |
+| `--category` | Only one asset class: `crypto`, `stocks`, `indices`, `commodities`, `fx`, `rates`, `preipo`, or `other`. Any case. Anything else exits `5`. |
+
+`count` is the rows after the filters and `total` the whole catalog. In a row, `dex` is `""` on the main dex. `funding` is the hourly rate as a fraction; positive means longs pay shorts. `markPx: null` means the price could not be read, not that the perp was delisted.
+
+```json
+{
+  "ok": true,
+  "command": "perps list",
+  "count": 1,
+  "total": 393,
+  "filter": { "dex": null, "category": "stocks" },
+  "unit": "USD",
+  "perps": [
+    {
+      "coin": "xyz:NVDA",
+      "tokenId": "hl:xyz:NVDA",
+      "ticker": "NVDA",
+      "dex": "xyz",
+      "dexName": "XYZ",
+      "category": "stocks",
+      "marginMode": "isolated",
+      "markPx": 182.4,
+      "change24hPct": 1.33,
+      "funding": 0.0000125,
+      "maxLeverage": 20,
+      "openInterest": 51234.5,
+      "dayNtlVlm": 90000000
+    }
+  ]
+}
+```
+
+### `perps show <coin>`
+
+Accepts a ticker (`BTC`, any case), a HIP-3 coin (`xyz:NVDA`), or an id (`hl:BTC`, `hl:xyz:NVDA`). A bare ticker that no main-dex perp carries, such as `NVDA`, resolves to a HIP-3 listing (the one with the most 24-hour volume when several dexes list it), and `resolution` says which; name the dex to pick another. Otherwise `resolution` is `null`.
+
+`actionTarget` is the side `--side` picked (default `LONG`), with `leverage` set only when `--leverage` was given. `actionTargets` always carries both sides. `--leverage` must be a whole number from 1 up to the asset's `maxLeverage`; a higher value exits `5`. `markPx` is what a `PRICE_USD` condition watches, and `minNotionalUsd` is the smallest order the exchange accepts, in position size (margin times leverage).
+
+```json
+{
+  "ok": true,
+  "command": "perps show",
+  "coin": "ETH",
+  "tokenId": "hl:ETH",
+  "ticker": "ETH",
+  "dex": "",
+  "dexName": "Hyperliquid",
+  "category": "crypto",
+  "marginMode": "cross",
+  "resolution": null,
+  "maxLeverage": 25,
+  "markPx": 3980.5,
+  "midPx": 3980.4,
+  "change24hPct": -1.2,
+  "funding": 0.0000125,
+  "minNotionalUsd": 10,
+  "actionTarget": {
+    "venue": "HYPERLIQUID",
+    "market": { "market_id": "hl:ETH", "outcome_token": "SHORT", "token_id": "hl:ETH" },
+    "leverage": 3
+  },
+  "actionTargets": {
+    "LONG": { "venue": "HYPERLIQUID", "market": { "market_id": "hl:ETH", "outcome_token": "LONG", "token_id": "hl:ETH" }, "leverage": 3 },
+    "SHORT": { "venue": "HYPERLIQUID", "market": { "market_id": "hl:ETH", "outcome_token": "SHORT", "token_id": "hl:ETH" }, "leverage": 3 }
+  },
+  "conditionSupported": true,
+  "conditionSignal": "PRICE_USD",
+  "conditionPriceSource": "hyperliquid_mark"
+}
+```
+
+An unknown coin exits `5`.
+
+### `perps history <coin>`
+
+`--interval` is one of `1m`, `5m`, `15m`, `30m`, `1h` (default), `4h`, `12h`, `1d`, `1w`. Without `--from`, the window is the 168 bars ending at `--to` (default now). Both accept an ISO-8601 date or unix milliseconds. A HIP-3 perp needs its dex here: a bare `NVDA` is looked up on the main dex only.
+
+```json
+{
+  "ok": true,
+  "command": "perps history",
+  "coin": "BTC",
+  "tokenId": "hl:BTC",
+  "interval": "1h",
+  "priceSource": "hyperliquid_mark",
+  "unit": "USD",
+  "count": 168,
+  "firstClose": 80010,
+  "lastClose": 82254,
+  "changePct": 2.8,
+  "candles": [{ "t": 1789395200000, "o": 80000, "h": 80500, "l": 79900, "c": 80010, "v": 12.5 }]
+}
+```
+
+A malformed coin or window exits `5`; an unreachable upstream exits `4`.
+
+### `perps positions`
+
+`withdrawableUsd` is your free USDC on Hyperliquid, summed over every dex; `withdrawableByDex` splits it per dex (`""` is the main dex). It is part of your cash: a withdrawal or a strategy leg on another chain moves it out when needed. `accountValueUsd` also counts margin backing open positions. `liquidationPx` is the mark price at which the exchange force-closes a position, before any exit of yours fires.
+
+```json
+{
+  "ok": true,
+  "command": "perps positions",
+  "count": 1,
+  "withdrawableUsd": 120.5,
+  "withdrawableByDex": { "": 120.5 },
+  "accountValueUsd": 770.5,
+  "withdrawalSupported": true,
+  "positions": [
+    { "coin": "ETH", "tokenId": "hl:ETH", "dex": "", "side": "SHORT", "size": 0.5, "entryPx": 4000, "markValueUsd": 1950, "unrealizedPnlUsd": 50, "leverage": 3, "leverageType": "cross", "liquidationPx": 5200, "marginUsedUsd": 650 }
+  ]
+}
+```
+
+Exits `3` without a session and `4` when Hyperliquid is unreachable.
+
+Each perp order needs at least `$10` of position size (margin times leverage), checked when the order is placed, not by `validate`. Funding is charged every hour a position is open. Hyperliquid perps are not available in some regions, including the United States: there, posting a live strategy that opens a perp position is refused with "Hyperliquid perps are not available in your region". See [/agent-strategy-guide.md](/agent-strategy-guide.md) for authoring a perp leg.
 
 ## Trading and portfolio commands
 
@@ -354,8 +501,8 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | --- | --- |
 | `order status [orderId]` | Status of one order, or all open orders if omitted. |
 | `order cancel <orderId> --confirm` | Cancels an open GTC order. |
-| `balance [--chain base\|polygon\|all]` | USDC balance per chain, plus `cash` (gross minus locked/pending). |
-| `portfolio [--venue polymarket\|base-stocks\|all]` | Balances, open orders, settled positions, tokenized stock holdings, capital reservations. |
+| `balance [--chain base\|polygon\|all]` | USDC balance per chain, plus `cash` (gross minus locked/pending). The free Hyperliquid perps balance appears as a `hyperliquid` entry and counts toward the total and `cash`; margin backing open perp positions does not. |
+| `portfolio [--venue polymarket\|base-stocks\|all]` | Balances, open orders, settled positions, tokenized stock holdings, capital reservations. Perp positions are listed by `perps positions`, not here. |
 
 ## Strategy management commands
 
@@ -432,29 +579,34 @@ miramarket-cli strategies update <strategyId> --set "nodes[4].condition.threshol
 
 ## Bridging commands
 
-Move USDC between Base and Polygon, or swap Polygon USDC to USDC.e, before trading. All require authentication (the wallet address is resolved from your session).
+Move USDC between Base and Polygon, swap Polygon USDC to USDC.e, or move USDC into your perps balance on Hyperliquid, before trading. All require authentication (the wallet address is resolved from your session).
 
 | Command | Description |
 | --- | --- |
 | `bridge quote --amount <usd> --direction <direction>` | Get a 0x quote. Returns `quoteId`, `transactions[]`, `expectedInputAmount`, `expectedOutputAmount`, `isCrossChain`. |
 | `bridge execute --amount <usd> --direction <direction> --confirm [--no-wait]` | Execute the transfer. Returns `quoteId`, `txHash` (the origin transaction), `txHashes[]`, `chainId`, and either `bridgeStatus` (cross-chain) or `settled` (same-chain swap). |
-| `bridge status <txHash> --chain-id <8453\|137> [--quote-id <id>]` | Poll a cross-chain transfer by its origin transaction hash (no auth required). `status` is one of `origin_tx_pending`, `origin_tx_succeeded`, `origin_tx_confirmed`, `origin_tx_reverted`, `bridge_pending`, `bridge_filled`, `bridge_failed`, `unknown`. |
+| `bridge status <txHash> --chain-id <8453\|137> [--quote-id <id>]` | Poll a transfer between Base and Polygon by its origin transaction hash (no auth required). It cannot confirm delivery into Hyperliquid. `status` is one of `origin_tx_pending`, `origin_tx_succeeded`, `origin_tx_confirmed`, `origin_tx_reverted`, `bridge_pending`, `bridge_filled`, `bridge_failed`, `unknown`. |
 
-`--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`. The last two are same-chain swaps on Polygon, which have no bridge to poll.
+`--direction` is one of `base-to-polygon`, `polygon-to-base`, `polygon-usdc-to-usdce`, `polygon-usdce-to-usdc`, `polygon-to-hyperliquid`, `base-to-hyperliquid`. `polygon-usdc-to-usdce` and `polygon-usdce-to-usdc` are same-chain swaps on Polygon, which have no bridge to poll.
 
-By default `bridge execute` waits: `ok: true` means a cross-chain transfer filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
+The two `*-to-hyperliquid` directions deliver USDC into your perps balance on Hyperliquid. They are one-way: there is no direction back out. Money leaves Hyperliquid automatically when a withdrawal or a leg on another chain needs it.
+
+By default `bridge execute` waits: `ok: true` means a transfer between Base and Polygon filled, or a same-chain swap confirmed on-chain. It exits `4` in three cases, and none of them is a reason to run `bridge execute` again, because the transaction is already on-chain and a retry would move the funds a second time:
 
 - `BRIDGE_FAILED`: the cross-chain bridge failed. The envelope says whether the funds were refunded on the origin chain.
-- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. Poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope.
+- `BRIDGE_PENDING`: the cross-chain transfer is still in flight after the polling window. For a transfer between Base and Polygon, poll it with `bridge status <txHash> --chain-id <chainId>` using the values in the envelope. For a `*-to-hyperliquid` transfer, follow it as described below instead.
 - `SWAP_UNCONFIRMED`: a same-chain swap on Polygon was submitted but not confirmed within the wait window. There is no bridge to poll. Look up the `txHash` from the envelope on a Polygon block explorer, or run `balance --chain polygon` until the USDC and USDC.e balances reflect the swap.
+
+A `*-to-hyperliquid` transfer is confirmed only by your Hyperliquid balance. `bridge status` cannot see delivery into Hyperliquid, so neither it nor `ok: true` from `bridge execute` proves the USDC arrived. Before you run `bridge execute`, record `withdrawableUsd` from `perps positions --json`. After it returns, whether `ok: true` or `BRIDGE_PENDING`, run `perps positions --json` until `withdrawableUsd` reaches the recorded value plus the amount, less fees; delivery can take up to about ten minutes. A running strategy, a withdrawal, or a perp position opening or closing in the meantime also changes `withdrawableUsd`, so account for those, or move funds while nothing else is using the balance. If it has not arrived after that, check the origin `txHash` on a Base or Polygon block explorer rather than running `bridge execute` again.
 
 ```bash
 miramarket-cli bridge quote --amount 100 --direction base-to-polygon --json
 miramarket-cli bridge execute --amount 100 --direction base-to-polygon --confirm --json
 miramarket-cli bridge status 0xabc... --chain-id 8453 --json
+miramarket-cli bridge quote --amount 25 --direction polygon-to-hyperliquid --json
 ```
 
-A strategy funds itself. Posting one that needs USDC on the other chain bridges on demand, so a manual bridge is only for moving funds ahead of time or for withdrawing.
+A strategy funds itself. Posting one that needs USDC on another chain, or on Hyperliquid, moves it on demand, so a manual bridge is only for moving funds ahead of time or for withdrawing.
 
 ## `miramarket-cli status`
 

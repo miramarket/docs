@@ -5,8 +5,8 @@ This repository contains the public documentation site for Miramarket.
 The docs focus on:
 
 - Using the Miramarket website and app
-- Building strategies with the visual strategy builder
-- Understanding markets, conditions, actions, and simulation/live runs
+- Building strategies with the visual strategy builder or the strategy assistant
+- Understanding markets, tokenized stocks, perps, conditions, actions, and simulation/live runs
 - Helping non-technical users get started safely
 - Setting up and using the CLI and MCP server for developers and AI agents
 
@@ -24,7 +24,7 @@ mint broken-links
 
 ## Content scope
 
-Do not document internal backend implementation details, Convex internals, or service operations. Public product docs must identify Polymarket as the currently supported venue and treat the live builder and **Run Live** as available.
+Do not document internal backend implementation details, Convex internals, or service operations. Public product docs must identify Polymarket as the currently supported prediction market venue, describe tokenized stocks on Base and perps on Hyperliquid as separate supported assets, and treat the live builder and **Run Live** as available.
 
 Signing in and adding funds (by card, exchange transfer, or wallet transfer) does not start a live run. Never imply that execution or fills are guaranteed.
 

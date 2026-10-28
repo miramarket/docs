@@ -15,7 +15,7 @@ Open **Condition** in the left panel. Click a card to add it at the current posi
 
 | Condition | What it watches | Best for |
 | --- | --- | --- |
-| **Price Condition** | A market price, ROI, or PnL value | Waiting for a threshold before continuing. |
+| **Price Condition** | A market price, ROI, or PnL value, or a stock or perp price in dollars | Waiting for a threshold before continuing. |
 | **Time Condition** | A market close time or calendar time | Timing a later step. |
 | **Resolution** | The final result of a selected market | Sending different outcomes down different paths. |
 
@@ -32,7 +32,9 @@ Check the side and comparison carefully. `>` and `<` produce opposite behavior. 
 
 If you add more than one rule to the same condition, every rule must be met. For example, you can wait for a `YES` side to reach `60¢` **and** for the market to be within ten minutes of close.
 
-A price condition can also watch a [tokenized stock](/strategy-builder/markets#tokenized-stocks). The threshold is then a share price in dollars rather than a probability: "if TSLA is greater than `$400`, continue." The condition watches the stock's reference price feed, which sits slightly below the pool price a trade pays.
+A price condition can also watch a [tokenized stock](/strategy-builder/markets#tokenized-stocks). The threshold is then a share price in dollars rather than a probability: "if TSLA is greater than `$400`, continue." The condition watches the stock's reference share price, which usually sits slightly below the pool price a trade pays. A few newer stocks, such as Palantir and Micron, have no reference price yet; a condition on one of them watches the pool's average price over the last 15 minutes, which lags the pool price after a fast move.
+
+A price condition can watch a [perp](/strategy-builder/perps) the same way, in dollars: "if BTC is less than `$80,000`, continue." It watches Hyperliquid's price for that perp. A perp condition has no `LONG` or `SHORT` choice; the price is the same for both sides.
 
 ## Time Condition
 
@@ -43,7 +45,7 @@ Examples:
 - "Continue 10 minutes before the selected market closes."
 - "Continue at the chosen date and time."
 
-Time conditions apply to Polymarket markets. A tokenized stock has no close or resolution, so only a specific date and time can be used with one. If the builder does not offer the timing you need for a market, choose a different condition or market.
+Time conditions watch Polymarket markets. A tokenized stock or a perp has no close time, so a Time Condition cannot watch one. If the builder does not offer the timing you need for a market, choose a different condition or market.
 
 ## Resolution
 
@@ -54,7 +56,7 @@ Examples:
 - "If the selected outcome resolves `YES`, continue to this branch."
 - "If it resolves `NO`, continue to the other branch."
 
-Use this condition only when you understand how the market resolves and what each branch of the strategy will do.
+Use this condition only when you understand how the market resolves and what each branch of the strategy will do. Stocks and perps never resolve, so Resolution cannot watch them.
 
 ## Before you run
 
@@ -78,7 +80,8 @@ Ask yourself:
 - Watching the wrong market or side.
 - Reversing a price comparison.
 - Treating market close and market resolution as the same moment.
-- Entering a probability where a stock condition expects dollars. A stock threshold of `0.6` means sixty cents a share, not 60%.
+- Entering a probability where a stock or perp condition expects dollars. A stock threshold of `0.6` means sixty cents a share, not 60%.
+- Setting a short's stop-loss below the entry price. A short loses money as the price rises, so its stop-loss is a price above where you entered.
 - Using **Run Live** before testing with **Simulate**.
 
 See [Strategy builder nodes](/strategy-builder/nodes) for a concise node reference and [Strategy examples](/strategy-builder/examples) for complete patterns.

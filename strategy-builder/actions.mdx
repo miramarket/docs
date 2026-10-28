@@ -3,21 +3,19 @@ title: "Actions"
 description: "Choose what a strategy does after a condition continues."
 ---
 
-An action is a node from the **Market** tab. It tells the strategy what to do after a condition continues.
-
-Use the **Market** tab for ordinary markets, recurring markets, **Wallet**, and **Utility**. Click a card to add it, or drag it onto the canvas to choose its position.
+An action tells the strategy what to do after a condition continues. Market actions come from the **Market** tab. **Exit** and **Hold** are under **Utils** in the **Condition** tab. Click a card to add it, or drag it onto the canvas to choose its position.
 
 ## Compare actions
 
-| Action | What it does | Common use |
-| --- | --- | --- |
-| **Buy Market** | Buys the selected `YES` or `NO` side. | Enter a market position. |
-| **Wallet** | Directs its allocation to your wallet destination. | Reserve part of a split. |
-| **Hold** | Keeps a market position open or leaves funds in the wallet. | Wait for a later rule without changing that allocation. |
+| Action | Where to find it | What it does | Common use |
+| --- | --- | --- | --- |
+| Market action | **Market** tab | Buys the selected `YES` or `NO` side, buys a stock, or opens a `LONG` or `SHORT` perp position. | Enter a position. |
+| **Exit** | **Condition** tab, **Utils** | Moves its allocation out of the current position and back to your wallet. | Take profit, stop a loss, or keep part of a split out of the market. |
+| **Hold** | **Condition** tab, **Utils** | Keeps a position open, or leaves funds where they are. | Wait for a later rule without changing that allocation. |
 
 ## Buy a market outcome
 
-Market cards create a **Buy Market** action. Select a named outcome when the card has more than one, then choose `YES` or `NO`. Click or drag the card to add that choice to the canvas.
+Prediction market cards create a market action. Select a named outcome when the card has more than one, then choose `YES` or `NO`. Click or drag the card to add that choice to the canvas.
 
 Review the action node before you run:
 
@@ -26,37 +24,38 @@ Review the action node before you run:
 - The displayed price.
 - The allocation.
 
+[Stock](/strategy-builder/markets#tokenized-stocks) cards add a **Buy** action for that stock. [Perp](/strategy-builder/perps) cards add a `LONG` or `SHORT` action with its own leverage setting.
+
 ## Use a recurring market outcome
 
-**Recurring** is a market filter, not a separate action type. It creates the same market-outcome action, but tracks a recurring market family. Choose a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**, then choose the current market and side.
+**Recurring** is a market category, not a separate action type. It creates the same market-outcome action, but tracks a recurring market family. Choose a time family such as **5m**, **15m**, **1h**, **4h**, or **daily**, then choose the current market and side.
 
 Verify the active window before you run. See [Recurring markets](/strategy-builder/recurring-markets) for details.
 
-## Wallet
+## Exit
 
-Choose **Wallet** in the **Market** tab to add a Wallet action. A Wallet action directs its allocated funds to the selected wallet destination.
+**Exit** moves its allocation out of the strategy's current position and back to your wallet.
 
-<img src="/images/tutorial/wallet-action.png" alt="Wallet action card in the Market tab shown" />
+- After a market action and a condition, Exit closes that share of the position: a take-profit when the condition waits for a gain, or a stop-loss when it waits for a fall. For a perp, it closes the position and returns the margin plus or minus your profit or loss.
+- In a split, Exit keeps that share of the available amount in your wallet instead of trading it.
 
-**Sign in** and a Wallet action are different:
+**Sign in** and an Exit action are different:
 
-- **Sign in** sets up your account, which is required before you can use **Run Live**.
-- A Wallet action is a node in the strategy itself.
+- **Sign in** sets up your account, which is required before you can run a strategy.
+- An Exit action is a node in the strategy itself.
 
 Signing in and adding funds does not start a live run. See [Simulation and Live Runs](/strategy-builder/run-simulation-live) for the sign-in and funding flow.
 
 ## Hold
 
-Choose **Utility** in the **Market** tab to add **Hold**. Hold keeps the current position open and lets the strategy continue to child conditions.
-
-<img src="/images/tutorial/utility-hold.png" alt="Hold card in the Utility section shown" />
+**Hold** keeps the current position open and lets the strategy continue to child conditions.
 
 Use Hold only when you understand the position that the strategy will keep. A Hold node may follow a market action and continue the strategy to another condition.
 
 **Hold** can mean two different things:
 
 - After a market action, it keeps that market position open.
-- In a wallet path, it leaves the allocation in the wallet.
+- In a split, it leaves that share of the available amount where it is.
 
 ## Allocation
 
@@ -64,7 +63,9 @@ Allocation is the percentage of the available amount assigned to an action. A si
 
 If a condition has multiple actions, their allocations must total `100%`. The builder balances new actions evenly unless you set an allocation explicitly.
 
-Example: a 70% market action and a 30% Wallet action split the available amount between those two actions.
+Example: a 70% market action and a 30% Exit split the available amount between those two actions.
+
+For a perp, the allocation is the margin. Leverage then multiplies the size of the position. See [Perps](/strategy-builder/perps#set-the-leverage).
 
 ## Build a valid flow
 
@@ -79,4 +80,4 @@ Actions in **Simulate** are simulated. **Run Live** is available and can use rea
 
 Always review the action, side, and allocation in a simulation before using **Run Live**.
 
-See [Strategy builder nodes](/strategy-builder/nodes) for the complete node reference and [Strategy examples](/strategy-builder/examples) for a Wallet split and Hold pattern.
+See [Strategy builder nodes](/strategy-builder/nodes) for the complete node reference and [Strategy examples](/strategy-builder/examples) for an Exit split and Hold pattern.

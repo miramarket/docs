@@ -3,26 +3,35 @@ title: "Markets and outcomes"
 description: "Find a market, choose the right outcome, and add it to a strategy."
 ---
 
-Markets are the questions a strategy can use. Polymarket is the supported prediction market venue. Separately, the **Stocks** category offers tokenized stocks on Base, which are not prediction markets and behave differently (see below). A market action attempts to buy a selected side of a market when you run the strategy; execution and fills are not guaranteed.
+Markets are what a strategy can trade. The **Market** tab has three kinds:
+
+- **Prediction Markets**: questions on Polymarket, the supported prediction market venue, with `YES` and `NO` sides.
+- **Stocks**: tokenized stocks on Base. They are not prediction markets and behave differently (see [Tokenized stocks](#tokenized-stocks)).
+- **Perps**: perpetual futures on Hyperliquid, with `LONG` and `SHORT` sides and optional leverage. See [Perps](/strategy-builder/perps).
+
+A market action attempts to buy what you selected when you run the strategy; execution and fills are not guaranteed.
 
 ## Use the Market tab
 
-Open **Market** in the left panel.
+Open **Market** in the left panel. The search box sits at the top, then the three kinds, then the categories for the kind you chose.
 
-<img src="/images/tutorial/market-panel.png" alt="Market tab with filters and search shown" />
+<img src="/images/tutorial/market-panel.png" alt="Market tab with categories and search shown" />
 
-Use the filters to browse:
+Under **Prediction Markets**, use the categories to browse:
 
 - **Trending** for active markets.
 - **Recurring** for markets that repeat.
-- Topic categories such as **Politics**, **Sports**, **Crypto**, **Finance**, **Tech**, and **Weather**.
+- Topic categories such as **Politics**, **Sports**, **Crypto**, **Finance**, **Tech**, **Culture**, **Geopolitics**, **Economy**, **Weather**, and **Elections**.
+- **Live** for markets on events happening now.
 - Search when you know what you want.
+
+On a phone or tablet, the categories form one row you can swipe.
 
 ## Read a market card
 
 <img src="/images/tutorial/market-card-outcomes.png" alt="A market card with YES and NO outcome buttons shown" />
 
-A market card can show:
+A prediction market card can show:
 
 - The market question.
 - One or more outcomes.
@@ -57,25 +66,27 @@ Read the event's resolution details before you add a grouped outcome. A group ca
 
 ## Search for a market
 
-Use the search box to narrow the list. Search by topic, team, asset, person, or event.
+Use the search box to narrow the list. Search by topic, team, asset, person, or event. Under **Stocks** and **Perps**, the box searches that list instead.
 
 If you cannot find the right market, do not use a similar-looking one unless you understand how it resolves.
 
 ## Tokenized stocks
 
-The **Stocks** category in the Market tab lists tokenized stocks on Base: real equities such as Tesla, NVIDIA, and Apple wrapped as tokens (TSLAc, NVDAc, AAPLc). They are not prediction markets, and they behave differently in a strategy:
+Choose **Stocks** in the **Market** tab to see tokenized stocks on Base: real equities wrapped as tokens. The list includes Apple, Amazon, Alphabet, Meta, Microsoft, Micron, NVIDIA, Palantir, Tesla, and others, each with a `c` suffix on its symbol (AAPLc, NVDAc, TSLAc). They are not prediction markets, and they behave differently in a strategy:
 
 - A stock has no `YES` or `NO` side. You either hold it or you do not, so a stock action simply buys it.
 - Its price is in **dollars per share**, not cents or a probability. A price condition on a stock uses a dollar threshold, for example "if TSLA crosses above $400".
-- It is bought and sold as a token swap on Base rather than as a Polymarket order, so the price you pay is the pool's price, which sits slightly above the reference share price. The card shows both.
-- A stock never resolves. A resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
+- It is bought and sold as a token swap on Base rather than as a Polymarket order, so the price you pay is the pool's price, which can differ from the price of the underlying share, most of all in thin trading and outside US market hours.
+- A stock never resolves. A time or resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
 - Tokenized stocks are not offered in every region. If they are unavailable where you are, a strategy that buys one cannot be run live.
 
-Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. There is no side to pick: click the card to add a **Buy** action for that stock, or drag it onto the canvas. A card with no price cannot be added until a price is available. The strategy assistant understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
+Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. There is no side to pick: click the card to add a **Buy** action for that stock, or drag it onto the canvas. A card with no price cannot be added until a price is available. The [strategy assistant](/strategy-builder/assistant) understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
+
+Stocks and [perps](/strategy-builder/perps) are different products. **Stocks** buys a tokenized share on Base. Some stocks are also listed under **Perps**, where you can go long or short with leverage on Hyperliquid.
 
 ## Add a market action to the canvas
 
-For a prediction market, selecting `YES` or `NO` prepares the card; a [tokenized stock](#tokenized-stocks) card has no side and is added directly. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
+For a prediction market, selecting `YES` or `NO` prepares the card; a [tokenized stock](#tokenized-stocks) card has no side and is added directly; a perp card adds a `LONG` unless you click `SHORT`. Click the card to add the selected market action, or drag the card to choose a position on the canvas.
 
 When the card appears on the canvas, verify the market, named outcome, selected side, and allocation. The action defaults to `100%` when it is the only action in its decision.
 
