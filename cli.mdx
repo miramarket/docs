@@ -3,7 +3,7 @@ title: "CLI"
 description: "Install the Miramarket command line tool, sign in, and post your first strategy."
 ---
 
-The Miramarket CLI lets you author, validate, and post strategies from a terminal instead of the visual builder. It is built for scripting and for AI coding agents that can run shell commands, but works just as well for a human typing commands directly.
+The Miramarket CLI lets you author, validate, and post strategies from a terminal instead of the visual builder. Strategies can trade Polymarket prediction markets, tokenized stocks on Base, and perps on Hyperliquid. It is built for scripting and for AI coding agents that can run shell commands, but works just as well for a human typing commands directly.
 
 If you want a visual canvas instead, use the [strategy builder](/quickstart).
 
@@ -53,7 +53,7 @@ This reports exactly what is missing and how to fix it. Two steps require you pe
 
 - **Delegate your wallet**, by opening [app.miramarket.org](https://app.miramarket.org) and signing in once in a browser. `miramarket-cli account status` will confirm once this is done.
 
-Run `miramarket-cli account status` again afterward to confirm you are ready to trade.
+Run `miramarket-cli account status` again afterward to confirm you are ready to trade. When the Terms, Privacy Policy, or Risk Disclosure change, `account status` reports them as not accepted until you run `account accept-policies` again.
 
 ## Post your first strategy
 
@@ -100,17 +100,20 @@ miramarket-cli preview ./fed.json
 miramarket-cli post ./fed.json --demo
 ```
 
-It works for tokenized stocks too, in dollars: `"buy TSLA if it crosses $400, sell at $450"`. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
+It works for tokenized stocks and perps too, in dollars: `"buy TSLA if it crosses $400, sell at $450"` or `"go 3x short on ETH, close it if it rises above $4,200"`. You can also describe a news situation instead of a trade, such as `"build a strategy around this week's Fed meeting"`: the CLI researches the news and the markets it moves first, and prints a short note on why it chose them. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
 
 ## Everyday commands
 
 | Command | What it does |
 | --- | --- |
-| `miramarket-cli balance` | Show your USDC balance and spendable cash. |
+| `miramarket-cli balance` | Show your USDC balance and spendable cash, including your free Hyperliquid balance. |
 | `miramarket-cli portfolio` | Show balances, open orders, and settled positions. |
 | `miramarket-cli markets search <query>` | Search Polymarket markets by keyword. |
 | `miramarket-cli stocks list` | Tokenized stocks on Base you can trade, with live prices. |
 | `miramarket-cli stocks history TSLA --range 1M` | Price history for one tokenized stock. |
+| `miramarket-cli perps list --category stocks` | Hyperliquid perps you can trade, with prices, funding, and leverage caps. |
+| `miramarket-cli perps show BTC --side SHORT --leverage 3` | One perp, with the exact target block for a strategy file. |
+| `miramarket-cli perps positions` | Your open perp positions and free Hyperliquid balance. |
 | `miramarket-cli strategies generate "<description>" --out ./s.json` | Build a strategy from plain English. |
 | `miramarket-cli strategies list` | List your strategies. |
 | `miramarket-cli strategies show <strategyId>` | Show details for one strategy. |
