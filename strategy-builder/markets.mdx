@@ -15,7 +15,7 @@ A market action attempts to buy what you selected when you run the strategy; exe
 
 Open **Market** in the left panel. The search box sits at the top, then the three kinds, then the categories for the kind you chose.
 
-<img src="/images/tutorial/market-panel.png" alt="Market tab with categories and search shown" />
+<img src="/images/tutorial/market-panel.webp" alt="Market tab with the search box, the Prediction Markets, Stocks, and Perps tabs, and the Prediction Markets categories" />
 
 Under **Prediction Markets**, use the categories to browse:
 
@@ -29,7 +29,7 @@ On a phone or tablet, the categories form one row you can swipe.
 
 ## Read a market card
 
-<img src="/images/tutorial/market-card-outcomes.png" alt="A market card with YES and NO outcome buttons shown" />
+<img src="/images/tutorial/market-card-outcomes.webp" alt="A market card with YES and NO outcome buttons shown" />
 
 A prediction market card can show:
 
@@ -60,7 +60,7 @@ Some events group mutually exclusive named outcomes in one card. You may see thi
 
 For example, if you select **Team A**, `YES` means Team A wins. `NO` means Team A does not win; it does not mean Team B wins unless you select Team B separately.
 
-<img src="/images/tutorial/market-card-outcomes.png" alt="Market card where a named outcome is selected before choosing YES or NO" />
+<img src="/images/tutorial/market-card-outcomes.webp" alt="Grouped market card with YES selected on the Google outcome" />
 
 Read the event's resolution details before you add a grouped outcome. A group can contain similar-looking choices with very different meanings.
 
@@ -79,6 +79,8 @@ Choose **Stocks** in the **Market** tab to see tokenized stocks on Base: real eq
 - It is bought and sold as a token swap on Base rather than as a Polymarket order, so the price you pay is the pool's price, which can differ from the price of the underlying share, most of all in thin trading and outside US market hours.
 - A stock never resolves. A time or resolution condition cannot watch it, and a stock you still hold when the strategy finishes is sold at that point.
 - Tokenized stocks are not offered in every region. If they are unavailable where you are, a strategy that buys one cannot be run live.
+
+<img src="/images/tutorial/stocks-panel.webp" alt="Stocks tab listing Apple, Amazon, Alphabet, and Meta with their ticker and live price" />
 
 Each stock card shows the live pool price and a price history you can switch between one day, one week, one month, and all time. There is no side to pick: click the card to add a **Buy** action for that stock, or drag it onto the canvas. A card with no price cannot be added until a price is available. The [strategy assistant](/strategy-builder/assistant) understands stocks too: "buy TSLA if it crosses $400 and sell at $450" builds a complete stock strategy.
 
