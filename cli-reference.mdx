@@ -153,7 +153,7 @@ Text-to-strategy. Describe what the strategy should do in plain English and get 
 
 `result` is one of four values. `ok` is `true` for all of them, because each is a real outcome rather than a failure:
 
-- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), `thesis`, and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg and a [perp](#hyperliquid-perp-commands) as a `HYPERLIQUID` leg, both with `PRICE_USD` conditions in dollars, ready to post.
+- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), `thesis`, and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg and a [perp](#hyperliquid-perp-commands) as a `HYPERLIQUID` leg, both with `PRICE_USD` conditions in dollars, ready to post. By default a trade named on one venue also gets one related position on another venue for 30% of the budget, named in `notices` (as in the example below); a prompt with "just", "only", or "nothing else" keeps one venue, and a notice says when the strategy stays on one venue and why.
 
   `thesis` is set when the prompt asked what to trade about a situation, event, or asset instead of choosing the position ("build a strategy around this week's Fed meeting"). The command researched the news and the markets it moves first, and `thesis` says what the strategy bets on (`bet`), whether it bets with or against the situation (`stance`: `WITH_SITUATION`, `CONTRARIAN`, or `MIXED`), why each market is in it (`legs[]`), what the strategy does (`rules[]`), what would break it (`breaks_if`), the headlines it rests on (`news[]`), and a two-sentence `summary`. Without `--json` the summary prints as a short note. `thesis` is `null` for every other prompt.
 - `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question. A candidate can also be one reading of a vague request rather than a market: it has `outcome` and `venue` set to `OPTION` and its `title` is the reading. Choose it the same way.
@@ -163,6 +163,7 @@ Text-to-strategy. Describe what the strategy should do in plain English and get 
 ```bash
 miramarket-cli strategies generate "buy YES on the Fed cutting rates in December if it drops below 40c, sell at 70c" --out ./fed.json --json
 miramarket-cli strategies generate "buy TSLA if it crosses \$400, sell at \$450" --out ./tsla.json --json
+miramarket-cli strategies generate "just buy TSLA if it crosses \$400, nothing else" --out ./tsla-only.json --json
 miramarket-cli strategies generate "go 3x short on ETH, close it above \$4,200" --out ./eth.json --json
 miramarket-cli strategies generate "also sell everything if it drops below 30c" --strategy ./fed.json --out ./fed.json --json
 miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out ./fed.json --json
@@ -177,10 +178,13 @@ miramarket-cli strategies generate --choose 3215006 --selection a1b2c3d4 --out .
   "strategyPath": "./tsla.json",
   "edited": false,
   "markets": [
-    { "market_id": "0xb2000000000000000000001e800a7f5189430cD0", "title": "Tesla Inc. (TSLAc)", "venue": "BASE_STOCKS", "outcome": "LONG", "current_price": 355.69 }
+    { "market_id": "0xb2000000000000000000001e800a7f5189430cD0", "title": "Tesla Inc. (TSLAc)", "venue": "BASE_STOCKS", "outcome": "LONG", "current_price": 355.69 },
+    { "market_id": "561203", "title": "Will Tesla close above $400 on December 31?", "venue": "POLYMARKET", "outcome": "YES", "current_price": 0.38 }
   ],
-  "stats": { "actionCount": 2, "conditionCount": 2, "riskProfile": "BALANCED", "heuristicScore": 90 },
-  "notices": [],
+  "stats": { "actionCount": 3, "conditionCount": 2, "riskProfile": "BALANCED", "heuristicScore": 90 },
+  "notices": [
+    "Added a related Polymarket market (Will Tesla close above $400 on December 31?) for 30% of the budget ($3 of $10) so the strategy isn't on one venue; ask to remove it for just the TSLA buy."
+  ],
   "unmatched": [],
   "changeSummary": [],
   "thesis": null,

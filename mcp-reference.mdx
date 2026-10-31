@@ -45,7 +45,7 @@ Stop and ask the owner for these. Never attempt them yourself:
    - **Default:** pass the user's request, in their own words, to `strategy_generate`.
    - **After your own research:** read `strategy_guide` with topic `"prompt"`, then pass a precise request to `strategy_generate`.
    - **Writing it yourself:** read `strategy_guide` with topic `"json"`, write the strategy JSON, and check it with `strategy_validate`.
-3. Read `unmatched` and `notices` in the result. Anything listed there was substituted or left out; tell the user. Show the user the result's `summary` and link (`links`) so they see every leg before anything else happens. Hosts that render MCP Apps already show it as a card; then keep your reply short.
+3. Read `unmatched` and `notices` in the result. Anything listed there was substituted or left out; tell the user. When `strategy_generate` built it, show the user the result's `summary` and link (`links`) so they see every leg before anything is saved; hosts that render MCP Apps already show it as a card, so then keep your reply short. For strategy JSON you wrote yourself, `strategy_validate` returns no summary: describe its legs, amounts, and exits to the user before you post it. `strategy_post` then returns the `summary` and link for it.
 4. Simulate first: `strategy_post` with `mode: "demo"` and an `idempotency_key`. Follow it with `strategy_show`.
 5. For real money, confirm the strategy and amount with the user. Then save a draft (`strategy_post`, `mode: "draft"`) and call `strategy_start_live` with the strategy's exact principal and a new `idempotency_key`.
 6. If the start waits for approval, send the user the `approveAt` link. Check `strategy_live_approval` no more than about every 10 seconds.
