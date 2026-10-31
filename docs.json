@@ -58,13 +58,14 @@
             "group": "Get started",
             "pages": [
               "cli",
-              "mcp"
+              "mcp-server"
             ]
           },
           {
             "group": "Reference",
             "pages": [
-              "cli-reference"
+              "cli-reference",
+              "mcp-reference"
             ]
           }
         ]
@@ -81,6 +82,11 @@
           "anchor": "Agent strategy guide (markdown)",
           "href": "/agent-strategy-guide.md",
           "icon": "robot"
+        },
+        {
+          "anchor": "MCP reference for agents (markdown)",
+          "href": "/mcp-reference.md",
+          "icon": "plug"
         },
         {
           "anchor": "Glossary",
