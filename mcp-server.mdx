@@ -1,0 +1,71 @@
+---
+title: "Connect an AI assistant"
+description: "Let an AI assistant such as Claude Code use your Miramarket account through the MCP server, choose what it may do, and stay in control of real money."
+---
+
+Miramarket's MCP server lets an AI assistant work with your account. You can ask it to show your strategies, build a strategy from a description, run a simulation, or start a live run. You approve the connection once in your browser, you choose what it may do, and you can disconnect it at any time.
+
+The assistant can never withdraw money. Withdrawals are always made by you, in the app.
+
+If you are setting up an agent or writing code against the server, see the [MCP reference](/mcp-reference).
+
+## What you need
+
+- A Miramarket account. To start live runs, your account setup must be finished: policies accepted and wallet delegated, as described in [CLI: finish account setup](/cli#finish-account-setup).
+- An AI assistant that supports MCP servers, such as Claude Code.
+
+## Connect Claude Code
+
+Add the server:
+
+```bash
+claude mcp add --transport http miramarket https://api.miramarket.org/mcp
+```
+
+Then type `/mcp` in Claude Code and choose **miramarket**. Your browser opens the Miramarket approval page.
+
+Other assistants that support remote MCP servers with OAuth sign-in connect with the same address: `https://api.miramarket.org/mcp`.
+
+## Approve the connection
+
+The approval page shows which app is asking. If the app is marked **unverified**, it registered itself rather than being identified by its publisher: approve it only if you just started the connection yourself.
+
+Choose what the assistant may do:
+
+- **Read your account** is always on: your strategies, runs, and committed funds.
+- **Create strategies** lets it build strategies, save them as drafts, and run simulations.
+- **Trade with real money** lets it start live runs on its own, up to a budget you choose, and ask you to approve any run beyond it. It is on by default with a `$100` budget.
+  - **With trading off,** the assistant cannot start live runs or ask you to approve one. You start live runs yourself in the app.
+  - **A lower budget** means more of its live runs wait for your approval. A run that fits in what is left of the budget still starts right away.
+
+**Approve** becomes available a moment after the page loads. The connection lasts 90 days; after that, the assistant asks you to sign in again.
+
+## Your budget for live runs
+
+The budget is the most the assistant may have in live runs it started on its own. A run counts against the budget for as long as it has money in the market, even after it finishes, until its positions close.
+
+- A live run that fits within the budget starts right away.
+- A live run that would go over waits for you. The assistant sends you a link to **Connected agents**.
+
+To answer a waiting run, open **Connected agents** at `app.miramarket.org/settings/agents`. Each request shows the assistant, the strategy, and the amount. Choose **Approve** to start it or **Deny** to refuse it. Requests you do not answer expire after a day. If you approved a run but it did not start, it stays listed with **Start now**.
+
+To change the budget, choose **Change budget** under the assistant on **Connected agents**, enter the new amount, and choose **Save**. The new budget applies from the assistant's next live run. Runs already going keep running, and runs waiting for you still need your answer. The assistant itself can never change its budget.
+
+## See and disconnect assistants
+
+**Connected agents** at `app.miramarket.org/settings/agents` lists every assistant you connected: what it may do, its budget, when it was last used, and when the connection ends. You can change an assistant's budget there.
+
+**Revoke** stops an assistant at its next request. Live runs it already started keep running; stop them from your strategies in the app.
+
+## What you can ask it to do
+
+- Show your strategies, how their runs are going, and how much money is committed.
+- Build a strategy from a plain-English description, using the same strategy assistant as the app. If your description could mean several markets, it asks you which one.
+- Check a strategy, save it as a draft, or run it as a simulation.
+- Start a live run, within your budget or with your approval.
+- Stop a run. Stopping a live run sells its open positions at market.
+- Point you to the app when you want to withdraw.
+
+Claude Code asks for your permission before every live start and every stop.
+
+Start with a simulation. Live runs use real funds, and execution and fills are not guaranteed. Leverage on perps magnifies losses, and a position can be liquidated.
