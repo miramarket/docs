@@ -213,7 +213,7 @@ Agents cannot withdraw or move funds out of the account. Call this when the user
 
 - `liveBudgetUsd` caps the combined principal of the live runs this connection started that still have money in the market. A run counts while it is running, and after it finishes until its positions close. `openLiveUsd` is that combined principal now.
 - A start fits when `openLiveUsd + principal_usd` is at most `liveBudgetUsd`. A start that fits begins at once; one that doesn't waits for the owner and expires after a day.
-- Only the owner sets or changes the budget.
+- Only the owner sets the budget (on the approval page) or changes it (**Change budget** on Connected agents). A new budget applies from your next `strategy_start_live`; you cannot change it.
 
 ## Retrying safely
 
