@@ -70,12 +70,21 @@ To change the budget, choose **Change budget** under the assistant on **Connecte
 ## What you can ask it to do
 
 - Show your strategies, how their runs are going, and how much money is committed.
-- Build a strategy from a plain-English description, using the same strategy assistant as the app. If your description could mean several markets, it asks you which one.
+- Build a strategy from a plain-English description, using the same strategy assistant as the app. If your description could mean several markets, it asks you which one. By default the strategy uses two venues: a trade you name gets a related position on another venue for 30% of the budget. Say "just" or "only" to keep one ([details](/strategy-builder/assistant#strategies-use-more-than-one-venue)).
 - Check a strategy, save it as a draft, or run it as a simulation.
 - Start a live run, within your budget or with your approval.
 - Stop a run. Stopping a live run sells its open positions at market.
 - Point you to the app when you want to withdraw.
 
 Claude Code asks for your permission before every live start and every stop. Other assistants have their own confirmation settings; check them before you allow trading.
+
+## See what a strategy does
+
+When the assistant builds or saves a strategy, it shows it to you before anything else happens: each leg with its venue, market, side, amount, and leverage, the total, how the strategy runs, and anything that was substituted or added.
+
+- In Claude and ChatGPT, this appears as a strategy card in the chat, with an **Open in Miramarket** button.
+- In other assistants, it appears as a short summary with a link.
+
+A strategy the assistant has only built, and not saved, opens in the builder, where you can review it and save it yourself. A saved strategy opens on its own page in the app, with its runs and results.
 
 Start with a simulation. Live runs use real funds, and execution and fills are not guaranteed. Leverage on perps magnifies losses, and a position can be liquidated.

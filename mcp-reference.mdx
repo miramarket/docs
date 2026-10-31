@@ -45,7 +45,7 @@ Stop and ask the owner for these. Never attempt them yourself:
    - **Default:** pass the user's request, in their own words, to `strategy_generate`.
    - **After your own research:** read `strategy_guide` with topic `"prompt"`, then pass a precise request to `strategy_generate`.
    - **Writing it yourself:** read `strategy_guide` with topic `"json"`, write the strategy JSON, and check it with `strategy_validate`.
-3. Read `unmatched` and `notices` in the result. Anything listed there was substituted or left out; tell the user.
+3. Read `unmatched` and `notices` in the result. Anything listed there was substituted or left out; tell the user. When `strategy_generate` built it, show the user the result's `summary` and link (`links`) so they see every leg before anything is saved; hosts that render MCP Apps already show it as a card, so then keep your reply short. For strategy JSON you wrote yourself, `strategy_validate` returns no summary: describe its legs, amounts, and exits to the user before you post it. `strategy_post` then returns the `summary` and link for it.
 4. Simulate first: `strategy_post` with `mode: "demo"` and an `idempotency_key`. Follow it with `strategy_show`.
 5. For real money, confirm the strategy and amount with the user. Then save a draft (`strategy_post`, `mode: "draft"`) and call `strategy_start_live` with the strategy's exact principal and a new `idempotency_key`.
 6. If the start waits for approval, send the user the `approveAt` link. Check `strategy_live_approval` no more than about every 10 seconds.
@@ -85,7 +85,7 @@ The account's strategies, with their status and latest run. No input. Needs `acc
 
 ### `strategy_show`
 
-One strategy: its nodes, status, principal (`initialPrincipalUsd`), and latest run. Needs `account:read`.
+One strategy: its nodes, status, principal (`initialPrincipalUsd`), latest run, and `url`, its page in the app. Needs `account:read`.
 
 | Input | Type | |
 | --- | --- | --- |
@@ -113,7 +113,7 @@ Builds a strategy from a description with the same strategy assistant as the app
 
 The result's `result` field is one of:
 
-- **`"strategy"`:** `{ result, strategy, markets, stats, notices, unmatched, thesis, changeSummary, next }`. `strategy` is the JSON to validate and post.
+- **`"strategy"`:** `{ result, strategy, markets, stats, notices, unmatched, thesis, changeSummary, summary, links, next }`. By default the strategy uses two venues: a trade named on one venue gets one related position on another that bets the same way, for 30% of the budget, with the named amounts scaled to the other 70%. A notice names it and how to remove it, or says why the strategy stays on one venue. A request with "just", "only", "nothing else", or similar keeps one venue. `strategy` is the JSON to validate and post. `summary` is markdown to show the user: each leg's venue, market, side, amount, and leverage, how it runs, and notes. `links` opens it, unsaved, in the Miramarket builder.
 - **`"market_selection"`:** the request could mean several markets. `{ result, question, candidates: [{ choice, marketId, title, outcome, venue, currentPrice }], resumable, selection, next }`. Ask the user, then call again with `choose: { selection, market }`, where `market` is a `marketId` or a `choice` number. If `resumable` is `false`, there is a `reason` instead of `selection`; rephrase the request, naming the market precisely.
 - **`"clarification"`:** `{ result, question }`. Ask the user, then send a new request.
 - **`"answer"`:** `{ result, answer }`. The user asked a question rather than for a strategy.
@@ -139,7 +139,7 @@ Validates and saves a strategy. No real money moves. Needs `strategies:write`.
 | `mode` | `"draft"` (default) or `"demo"` | `"draft"` checks that its markets can be traded, then saves it unstarted, ready for `strategy_start_live`. `"demo"` saves it and starts a simulated run. |
 | `idempotency_key` | string | Recommended. See [Retrying safely](#retrying-safely). |
 
-Returns `{ strategyId, name, mode, runId, next }`. `runId` is `null` for a draft.
+Returns `{ strategyId, name, mode, runId, url, summary, links, next }`. `runId` is `null` for a draft. `url` is the strategy's page in the app; show the user `summary` and the link.
 
 ### `strategy_start_live`
 
@@ -154,7 +154,7 @@ Starts a live run of a saved draft, committing its principal. Needs `trade`. Cli
 Within the budget, it starts now:
 
 ```json
-{ "strategyId": "...", "name": "...", "runId": "...", "principalUsd": 5, "live": true }
+{ "strategyId": "...", "name": "...", "runId": "...", "principalUsd": 5, "live": true, "url": "https://app.miramarket.org/strategies/..." }
 ```
 
 Beyond the budget, it waits for the owner:
@@ -211,6 +211,10 @@ Returns `{ runId, result: { message, success } }`. For a live run, open position
 ### `withdraw_in_app`
 
 Agents cannot withdraw or move funds out of the account. Call this when the user wants to withdraw. No input. Returns `{ url, steps, why }` to pass on to the user.
+
+## Strategy cards
+
+`strategy_generate` (when it builds a strategy) and `strategy_post` also return the strategy as `structuredContent.card`, and declare an MCP App view for it, `ui://miramarket/strategy-card.html` (`text/html;profile=mcp-app`, in `_meta.ui.resourceUri` and `openai/outputTemplate`). Hosts that support MCP Apps, such as Claude and ChatGPT, render the card inline with an **Open in Miramarket** button. Other hosts get the same content as the text `summary`.
 
 ## Budget rules
 

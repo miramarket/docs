@@ -21,13 +21,24 @@ The chatbox suggests a few sample prompts to start from. Click one to send it.
 
 The assistant keeps strategies simple unless you ask for more: a few conditions and up to two markets. Ask for a detailed or hedged strategy if you want more steps. When you name the position yourself, it adds only the exits you asked for.
 
+### Strategies use more than one venue
+
+By default, the assistant spreads a strategy across two venues when it can. When you name a trade on one venue, it adds one related position on another venue that bets the same way. For example, beside a Nasdaq short on Hyperliquid, it might buy `YES` on a Polymarket market about stocks falling.
+
+- **Budget:** the total stays the amount you set. The related position gets 30% of it, and the amounts you named get the other 70%. For example, a $20 short becomes a $14 short and a $6 related position.
+- **Timing:** it opens when your trade opens, and a "sell everything" exit you set sells it too.
+- **What it tells you:** the reply names the added position and how to remove it. When nothing related fits, or your trade would fall under a venue's minimum after the split, it says the strategy stays on one venue and why.
+- **To keep one venue:** say so, for example "just short BTC 2x with $30" or "only this trade, nothing else". You can also ask it to remove the added position afterward.
+
+There is no related position for sports, entertainment, weather, or election markets, or when your request is already on two venues.
+
 ## Describe a situation instead
 
 You do not have to choose the market yourself. Describe a news situation or an event, such as "build a strategy around this week's Fed meeting", and the assistant researches it first:
 
 1. It reads recent news about the situation. One headline at a time appears under the progress line, with its source.
 2. It finds the markets the situation could move.
-3. It designs a strategy from what it read.
+3. It designs a strategy from what it read, on two venues when the situation has markets on both (for example, a Polymarket market and a Hyperliquid perp).
 
 Its reply is two sentences: why it chose these markets, then what the strategy does. Check that the reasoning matches your view of the situation before you run it.
 
