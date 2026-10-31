@@ -100,7 +100,7 @@ miramarket-cli preview ./fed.json
 miramarket-cli post ./fed.json --demo
 ```
 
-It works for tokenized stocks and perps too, in dollars: `"buy TSLA if it crosses $400, sell at $450"` or `"go 3x short on ETH, close it if it rises above $4,200"`. You can also describe a news situation instead of a trade, such as `"build a strategy around this week's Fed meeting"`: the CLI researches the news and the markets it moves first, and prints a short note on why it chose them. To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
+It works for tokenized stocks and perps too, in dollars: `"buy TSLA if it crosses $400, sell at $450"` or `"go 3x short on ETH, close it if it rises above $4,200"`. You can also describe a news situation instead of a trade, such as `"build a strategy around this week's Fed meeting"`: the CLI researches the news and the markets it moves first, and prints a short note on why it chose them. Generated strategies use two venues by default: a trade you name on one venue gets a related position on another for 30% of the budget, which the notices name. Say "just" or "only" in the description to keep one venue ([details](/strategy-builder/assistant#strategies-use-more-than-one-venue)). To change a generated file, describe the change: `miramarket-cli strategies generate "also sell everything below 30 cents" --strategy ./fed.json --out ./fed.json`.
 
 ## Everyday commands
 
