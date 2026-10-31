@@ -12,7 +12,7 @@ If you are setting up an agent or writing code against the server, see the [MCP 
 ## What you need
 
 - A Miramarket account. To start live runs, your account setup must be finished: policies accepted and wallet delegated, as described in [CLI: finish account setup](/cli#finish-account-setup).
-- An AI assistant that supports MCP servers, such as Claude Code.
+- An AI assistant that supports MCP servers: Claude Code, Claude on the web, desktop, or mobile, ChatGPT, or Grok.
 
 ## Connect Claude Code
 
@@ -24,7 +24,17 @@ claude mcp add --transport http miramarket https://api.miramarket.org/mcp
 
 Then type `/mcp` in Claude Code and choose **miramarket**. Your browser opens the Miramarket approval page.
 
-Other assistants that support remote MCP servers with OAuth sign-in connect with the same address: `https://api.miramarket.org/mcp`.
+## Connect Claude, ChatGPT, or Grok
+
+Web and app assistants connect with the same address, `https://api.miramarket.org/mcp`, added as a custom connector. Menu names change from time to time, so look for adding a custom connector or MCP server in the assistant's settings.
+
+- **Claude on the web, desktop, or mobile:** add a custom connector with the address in Claude's settings.
+- **ChatGPT:** turn on developer mode in ChatGPT's settings, then create a connector with the address. Developer mode is not available on every plan.
+- **Grok:** add a custom connector, or MCP server, with the address.
+
+Each one then opens the Miramarket approval page, the same as for Claude Code.
+
+Other assistants that support remote MCP servers with OAuth sign-in connect the same way.
 
 ## Approve the connection
 
@@ -66,6 +76,6 @@ To change the budget, choose **Change budget** under the assistant on **Connecte
 - Stop a run. Stopping a live run sells its open positions at market.
 - Point you to the app when you want to withdraw.
 
-Claude Code asks for your permission before every live start and every stop.
+Claude Code asks for your permission before every live start and every stop. Other assistants have their own confirmation settings; check them before you allow trading.
 
 Start with a simulation. Live runs use real funds, and execution and fills are not guaranteed. Leverage on perps magnifies losses, and a position can be liquidated.
