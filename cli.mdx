@@ -130,4 +130,6 @@ Every command supports a `--json` flag for machine-readable output, which agents
 
 The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then either `miramarket-cli strategies generate "<description>" --out ./s.json --json` or `miramarket-cli schema` plus hand-authored JSON, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
 
+If your agent supports MCP, you can connect it to the [MCP server](/mcp) instead: it gets the same strategy tools without shell access, and you set a budget for the live runs it may start on its own.
+
 For the full strategy JSON format, worked examples, and the rules that determine whether a strategy actually behaves as intended (most of which `validate` can't check for you), point your agent at [/agent-strategy-guide.md](/agent-strategy-guide.md) — a single markdown file meant to be fetched and read directly, not browsed.

@@ -1,0 +1,79 @@
+---
+title: "MCP server"
+description: "Connect an AI assistant such as Claude Code to your Miramarket account, choose what it may do, and approve live runs beyond its budget."
+---
+
+Miramarket runs an MCP server, so an AI assistant that supports the Model Context Protocol can work with your account directly: read your balances and strategies, build strategies, run simulations, and start live runs within a budget you set. You approve the connection once in your browser, and you can disconnect it at any time.
+
+The server is at:
+
+```text
+https://api.miramarket.org/mcp
+```
+
+If you would rather have an agent run shell commands, use the [CLI](/cli) instead. Both work with the same account.
+
+## Connect Claude Code
+
+```bash
+claude mcp add --transport http miramarket https://api.miramarket.org/mcp
+```
+
+Then run `/mcp` in Claude Code and choose **miramarket** to sign in. Your browser opens the Miramarket approval page.
+
+Other MCP clients that support remote servers with OAuth sign-in can connect with the same URL.
+
+## Approve the connection
+
+The approval page shows which app is asking and where your answer is sent. An app that registered itself, rather than being identified by its publisher, is marked **unverified**: approve it only if you just started the connection yourself.
+
+Choose what the app may do:
+
+| Permission | What it allows |
+| --- | --- |
+| **Read your account** | Always on. Balances, strategies, and runs. |
+| **Create strategies** | Build strategies, save them as drafts, and run simulations. |
+| **Trade with real money** | Start live runs on its own, up to the budget you set. On by default, with a `$100` budget. |
+
+Withdrawals are never allowed through a connection: you make them yourself in the app. **Approve** becomes available a moment after the page loads. The connection lasts 90 days, after which the app asks you to sign in again.
+
+## Your budget for live runs
+
+The budget is the most the app may have in live runs it started on its own. A run counts against it while it still has money in the market, including after it finishes, until its positions close. A live start that fits starts right away. A start that would go over waits for you.
+
+To approve or deny a waiting start, open **Connected agents** at `app.miramarket.org/settings/agents`. Each request shows the app, the strategy, and the amount, and expires after a day. Approving starts the run with the same checks as any live run. If you approved a start but it did not go through, the request stays listed with **Start now**.
+
+The budget is set when you approve the connection. To change it, disconnect the app on **Connected agents** and connect it again.
+
+Starting a live run through a connection still requires a finished account setup: accepted policies and a delegated wallet, as for the [CLI](/cli#finish-account-setup).
+
+## See and disconnect apps
+
+**Connected agents** at `app.miramarket.org/settings/agents` lists every app you connected, what it may do, its budget, when it was last used, and when the connection ends. **Revoke** stops the app at its next request. Live runs it already started keep running; stop them from your strategies in the app.
+
+## What the app can do
+
+| Tool | What it does |
+| --- | --- |
+| `whoami` | What this connection may do: its permissions, budget, and how much of the budget is in use. |
+| `capital_summary` | How much of your money is committed to running strategies and pending withdrawals. |
+| `strategies_list` | Your strategies. |
+| `strategy_show` | One strategy and its latest run. |
+| `strategy_generate` | Builds a strategy from plain English with the same strategy assistant as the app. |
+| `strategy_guide` | The guide for writing a strategy or a strategy description. |
+| `strategy_validate` | Checks a strategy for errors before posting. |
+| `strategy_post` | Saves a strategy as a draft after checking its markets can be traded, or also starts a simulation. No real money moves. |
+| `strategy_start_live` | Starts a live run of a saved strategy, or asks you to approve it if it is over the budget. |
+| `strategy_live_approval` | Whether you approved, denied, or have not yet answered a waiting start. |
+| `strategy_cancel` | Stops a run. Stopping a live run closes its open positions at market. |
+| `withdraw_in_app` | Tells you how to withdraw in the app. |
+
+Claude Code asks you before every `strategy_start_live` and `strategy_cancel` call. Posting and starting take a key, so a retry after a timeout returns the first result instead of posting or starting twice.
+
+## Three ways to make a strategy
+
+1. **Describe it.** The app passes your words to `strategy_generate`, the same strategy assistant as the app. This is the default. If your description could mean several markets, it asks which one you meant.
+2. **Let the app write the description.** The app researches the markets and news itself, then writes a precise description following `strategy_guide` with the `prompt` topic and passes it to `strategy_generate`.
+3. **Let the app write the strategy.** The app writes the strategy JSON following `strategy_guide` with the `json` topic, checks it with `strategy_validate`, and posts it with `strategy_post`. The [agent strategy guide](/agent-strategy-guide.md) explains the format and the mistakes validation cannot catch.
+
+Whichever way it is built, start with a simulation. Live runs use real funds, and execution and fills are not guaranteed. Leverage on perps magnifies losses, and a position can be liquidated.

@@ -52,12 +52,13 @@
         ]
       },
       {
-        "tab": "CLI",
+        "tab": "CLI and MCP",
         "groups": [
           {
             "group": "Get started",
             "pages": [
-              "cli"
+              "cli",
+              "mcp"
             ]
           },
           {
