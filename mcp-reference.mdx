@@ -55,7 +55,7 @@ Stop and ask the owner for these. Never attempt them yourself:
 
 Every tool returns one text item. On success it holds JSON, except `strategy_guide`, which returns plain text. On failure the result has `isError: true`, and the text says what went wrong and what to do.
 
-`strategy_post`, `strategy_start_live`, and `strategy_cancel` change the account. Call each one on its own, never from inside a script or a batch of tool calls: the host asks the user to confirm it, and a host may fail a write called from a script. In ChatGPT that failure reads "The tool failed internally", and the same call succeeds when made on its own.
+`strategy_post`, `strategy_start_live`, and `strategy_cancel` change the account. Call each one on its own, never from inside a script or a batch of tool calls: the host may ask the user to confirm it, depending on its confirmation settings, and a host may fail a write called from a script. In ChatGPT that failure reads "The tool failed internally", and the same call succeeds when made on its own.
 
 ### `whoami`
 
