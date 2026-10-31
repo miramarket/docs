@@ -33,7 +33,7 @@ There is no withdrawal scope. The owner chooses the scopes and the budget on the
 Stop and ask the owner for these. Never attempt them yourself:
 
 - **Approve the connection** on the Miramarket approval page in their browser.
-- **Answer a live start beyond the budget** at `app.miramarket.org/settings/agents`.
+- **Answer a live start beyond the budget** on **Connected agents** (`manageAt` from `whoami`, or the app's account menu).
 - **Withdraw funds**, in the app. Call `withdraw_in_app` to tell them where.
 - **Finish account setup** for live runs: accept the current policies and delegate their wallet.
 - **Change the budget or revoke the connection.**
@@ -68,11 +68,12 @@ What this connection may do. No input.
   "liveBudgetUsd": 100,
   "openLiveUsd": 0,
   "connectionExpiresAt": "2027-01-29T00:42:11.567Z",
+  "manageAt": "https://app.miramarket.org/settings/agents",
   "note": "..."
 }
 ```
 
-`liveBudgetUsd` and `openLiveUsd` are `null` without the `trade` scope.
+`liveBudgetUsd` and `openLiveUsd` are `null` without the `trade` scope. `manageAt` is **Connected agents**, where the owner changes the budget, answers waiting starts, and revokes the connection; it is also in the app's account menu. Send the owner there when they ask how to change any of these.
 
 ### `capital_summary`
 
