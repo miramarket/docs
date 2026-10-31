@@ -13,7 +13,7 @@ Trading involves risk, and leverage magnifies losses. A simulation (`mode: "demo
 
 - **Transport:** Streamable HTTP at `https://api.miramarket.org/mcp`.
 - **Sign-in:** OAuth 2.1 with PKCE (`S256`). A request without a token gets `401` with a `WWW-Authenticate` header naming the resource metadata at `https://api.miramarket.org/.well-known/oauth-protected-resource/mcp`. The authorization server metadata is at `https://api.miramarket.org/.well-known/oauth-authorization-server`.
-- **Client identity:** a Client ID Metadata Document (preferred), or dynamic registration for public clients whose redirect URIs are loopback addresses or Claude's own callback.
+- **Client identity:** a Client ID Metadata Document (preferred), or dynamic registration for public clients. A registration keeps only its loopback redirect URIs and https ones on a web AI platform's callback host (`claude.ai`, `chatgpt.com`, `grok.com`, `console.x.ai`, `www.cursor.com`), and the response lists the ones it kept; a registration with none is refused. A metadata document's redirect URIs must include at least one https or loopback URI; others, such as a custom URL scheme, are ignored.
 - **Resource:** request tokens for `https://api.miramarket.org/mcp`. The authorization response includes `iss`; check that it is `https://api.miramarket.org`.
 - **Tokens:** access tokens last 15 minutes. Refresh tokens rotate on every use. Presenting a refresh token that was already used ends the whole connection.
 - **Lifetime:** a connection lasts 90 days, then the owner signs in again.
@@ -229,4 +229,7 @@ Agents cannot withdraw or move funds out of the account. Call this when the user
 - **Tool error** (`isError: true`): the text explains it. For a missing scope, ask the owner to reconnect and allow it.
 - **HTTP `401`:** the access token expired or the connection ended. Refresh the token. If the refresh fails with `invalid_grant`, the connection was revoked or reached its 90 days; ask the owner to connect again.
 - **HTTP `429`:** too many requests. Wait for the `Retry-After` seconds.
-- **Rate limits:** each client IP gets 240 requests a minute to `/mcp` and 30 a minute to the sign-in endpoints, and each connection can call `strategy_generate` 10 times a minute.
+- **Rate limits:**
+  - `/mcp`: 240 requests a minute per connection, and at most 6,000 a minute from one IP across connections.
+  - Token exchange, refresh, and revocation: 600 a minute per IP. Registration: 120 a minute per IP. The sign-in pages a person opens: 30 a minute per IP.
+  - `strategy_generate`: 10 calls a minute per connection.
