@@ -63,7 +63,7 @@ To change the budget, choose **Change budget** under the assistant on **Connecte
 
 ## See and disconnect assistants
 
-**Connected agents** (in the account menu, or at `app.miramarket.org/settings/agents`) lists every assistant you connected: what it may do, its budget, when it was last used, and when the connection ends. You can change an assistant's budget there.
+**Connected agents** (in the account menu, or at `app.miramarket.org/settings/agents`) lists every assistant you connected: what it may do, its budget, when it was last used, and when the connection ends. You can change an assistant's budget there. [Miramarket CLI](/cli#sign-in) logins are listed there too, as **Miramarket CLI** followed by the computer's name.
 
 **Revoke** stops an assistant at its next request. Live runs it already started keep running; stop them from your strategies in the app.
 
@@ -71,20 +71,35 @@ To change the budget, choose **Change budget** under the assistant on **Connecte
 
 - Show your strategies, how their runs are going, and how much money is committed.
 - Build a strategy from a plain-English description, using the same strategy assistant as the app. If your description could mean several markets, it asks you which one. By default the strategy uses two venues: a trade you name gets a related position on another venue for 30% of the budget. Say "just" or "only" to keep one ([details](/strategy-builder/assistant#strategies-use-more-than-one-venue)).
-- Check a strategy, save it as a draft, or run it as a simulation.
-- Start a live run, within your budget or with your approval.
+- Design a strategy itself, when you ask it to, for example "design it yourself". It looks up the markets, writes the strategy, and checks it with Miramarket.
+- Check a strategy, save it as a draft, or run it as a simulation, when you ask it to.
+- Start a live run, within your budget or with your approval, when you ask it to.
 - Stop a run. Stopping a live run sells its open positions at market.
 - Point you to the app when you want to withdraw.
 
 Claude Code asks for your permission before every live start and every stop. Other assistants have their own confirmation settings; check them before you allow trading.
 
+## While it builds
+
+When you ask for a strategy, the assistant first searches the news on what you asked about, if it can search the web. Then it hands your request, in your own words, to Miramarket. A build that researches the news can take 20 seconds or more, so the assistant tells you each step as it happens, such as reading the news or checking the markets it could move. In Claude and ChatGPT, the strategy card shows the steps instead.
+
 ## See what a strategy does
 
 When the assistant builds or saves a strategy, it shows it to you before anything else happens: each leg with its venue, market, side, amount, and leverage, the total, how the strategy runs, and anything that was substituted or added.
 
-- In Claude and ChatGPT, this appears as a strategy card in the chat, with an **Open in Miramarket** button.
+- In Claude and ChatGPT, this appears as a strategy card in the chat. It draws each step of the strategy with its market, shows the headlines a researched build read under **What it read**, and has an **Open in Miramarket** button.
 - In other assistants, it appears as a short summary with a link.
 
 A strategy the assistant has only built, and not saved, opens in the builder, where you can review it and save it yourself. A saved strategy opens on its own page in the app, with its runs and results.
+
+## Simulate or run it
+
+The assistant stops once it has shown you the strategy. You decide whether to simulate it or run it:
+
+- **On the card**, in Claude and ChatGPT: enter an amount (at least `$5`) and choose **Simulate** or **Run Live**. **Run Live** asks you to confirm once more in the card. A live run beyond the assistant's budget waits for your approval, and the card shows the link.
+- **In Miramarket**: open the link. A built strategy opens in the builder with the same **Simulate** and **Run Live** buttons.
+- **By asking the assistant** in words, for example "simulate it" or "run it live". Where no card shows, this is how a saved draft starts a live run.
+
+If the card has no **Simulate** or **Run Live** buttons, reconnect the assistant: assistants read the card when they connect.
 
 Start with a simulation. Live runs use real funds, and execution and fills are not guaranteed. Leverage on perps magnifies losses, and a position can be liquidated.
