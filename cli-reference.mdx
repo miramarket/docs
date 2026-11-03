@@ -5,7 +5,7 @@ description: "Every @miramarket/cli command, its flags, JSON output, and exit co
 
 Full reference for every `miramarket-cli` command. For installation and a first walkthrough, see [CLI](/cli). For the strategy JSON format and correctness rules, see [/agent-strategy-guide.md](/agent-strategy-guide.md).
 
-Every command supports `--json` for machine-readable output. In `--json` mode, stdout carries exactly one JSON object and nothing else — no banners, color, or spinner frames — except `strategies watch --events`, noted below. Piping to a non-TTY also disables color and spinners automatically.
+Every command supports `--json` for machine-readable output. In `--json` mode, stdout carries exactly one JSON object and nothing else — no banners, color, or spinner frames — except `login --events` and `strategies watch --events`, which print one JSON object per line (NDJSON), noted below. Piping to a non-TTY also disables color and spinners automatically.
 
 ## Envelope and exit codes
 
@@ -64,8 +64,14 @@ The budget (default `$100`) is one dollar amount for both live runs and single o
 | Flag | Description |
 | --- | --- |
 | `--force` | Start a new login even if a valid one is cached, for example to switch accounts or to change the switches. Revoke the old login on Connected agents, or with `logout` first. |
-| `--events` | Agent mode (implies `--json`). Prints one NDJSON line `{"event":"verification","verificationUrl","userCode","expiresAt","requiredAction"}` as soon as the code exists, then the final envelope line. With a valid cached login, only the final line (`alreadyAuthenticated: true`). |
+| `--events` | Agent mode (implies `--json`). Prints one NDJSON `verification` line as soon as the code exists (below), then the final envelope line. With a valid cached login, only the final line (`alreadyAuthenticated: true`). |
 | `--json` | Prints nothing until the login is approved, so an agent can't show the human the code with it; agents use `--events`. |
+
+With `--events`, the first line looks like this; show the human `verificationUrl` and `userCode`:
+
+```json
+{"event":"verification","verificationUrl":"https://app.miramarket.org/oauth/device?code=BCDF-GHJK","userCode":"BCDF-GHJK","expiresAt":"2026-11-03T10:10:00.000Z","requiredAction":"Show this URL and code to the human and ask them to approve the login in a browser. This command exits once they do."}
+```
 
 Without `--force`, a valid cached login short-circuits the command with a notice. The envelope reports `scopes` (what was allowed) and `manageAt` (the Connected agents page). A denied login exits `3` with `LOGIN_DENIED`; a code that expired before approval exits `3` with `LOGIN_CODE_EXPIRED`. A login from a CLI older than 1.6.0 no longer works: commands report `LOGIN_OUTDATED` (exit `3`) and `login` starts a new one.
 
@@ -574,14 +580,14 @@ Each perp order needs at least `$10` of position size (margin times leverage), c
 
 Places a CLOB limit order directly — for manual/tactical orders, not strategy automation (use `post` under [Strategy authoring commands](#strategy-authoring-commands) for that). Requires authentication and `--confirm`.
 
-**Needs the Place orders and bridge switch.** Each buy must cost (price x size) no more than the login's budget, or it exits `3` before anything is signed; sells are never capped. A budget raised on Connected agents applies at once.
+**Needs the Place orders and bridge switch.** Each buy must cost (price x size, in USDC) no more than the login's budget, or it exits `3` before anything is signed; sells are never capped. A budget raised on Connected agents applies at once.
 
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--token-id` | yes | CLOB token ID for the outcome you're trading. |
 | `--side` | yes | `buy` or `sell`. |
 | `--price` | yes | Limit price between 0 and 1 (e.g. `0.55` = 55¢). |
-| `--size` | yes | Order size in USDC. |
+| `--size` | yes | Number of shares (outcome tokens). A buy costs price x size in USDC: `--price 0.55 --size 10` costs `$5.50`. |
 | `--order-type` | no | `FOK` (fill-or-kill, default) or `GTC` (rests on the book). |
 | `--confirm` | yes | Required safety flag. |
 
@@ -620,7 +626,7 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | Flag | Description |
 | --- | --- |
 | `--json` | Blocks, emits exactly one final envelope on completion. |
-| `--events` | Emits one NDJSON line per status transition, then a final line — the one exception to "one JSON object per command." |
+| `--events` | Emits one NDJSON line per status transition, then a final line — like `login --events`, an exception to "one JSON object per command." |
 | `--run <runId>` | Watch a specific run instead of the strategy's latest. |
 | `--until <statuses>` | Comma-separated terminal statuses to stop at (default `completed,failed,canceled`). |
 | `--timeout <seconds>` | Give up after this long (default 86400); exits `4` with `WATCH_TIMEOUT`. |
