@@ -19,25 +19,53 @@ npm install -g @miramarket/cli
 miramarket-cli login
 ```
 
-This prints a short code and a verification link:
+This prints a short code and a link:
 
 ```text
 Open this URL in your browser to log in
-https://app.miramarket.org/authorize?user_code=ABCD-1234  (code: ABCD-1234)
-Waiting for approval...
+https://app.miramarket.org/oauth/device?code=BCDF-GHJK  (code: BCDF-GHJK)
+Waiting for approval (10 min timeout)...
 ```
 
-Open the link in any browser — it does not need to be on the same device you are running the CLI from, which is useful if you are working over SSH or on a server with no browser installed. Sign in with the usual Miramarket options (email, Google, Discord) and approve the request. The CLI then finishes authenticating automatically.
+Open the link in any browser. It does not need to be on the device running the CLI, which helps over SSH or on a server with no browser. Sign in with the usual Miramarket options (email, Google, Discord), check that the code on the page matches the one in your terminal, and choose what this login may do:
 
-Once you approve, the session stays signed in on that machine indefinitely — there is no need to log in again for routine use. If you ever want to check whether you are still signed in:
+| Switch | Default | What it allows |
+| --- | --- | --- |
+| **Read your account** | Always on | Balances, positions, strategies, and runs. |
+| **Create strategies** | On | Draft, edit, rename, and delete strategies, and run simulations. |
+| **Trade with real money** | On | Start live runs on its own while their combined principal stays within the budget. A run beyond it waits for you to approve it. |
+| **Place orders and bridge** | On | Buy and sell on Polymarket directly and move USDC between chains. Each buy or bridge is capped at the budget; selling is never capped. |
+| **Withdraw funds** | Off | Send your money to any address, with no limit. Leave it off unless you withdraw from the terminal. |
+
+The budget is one dollar amount for both live runs and single orders, `$100` by default. Choose **Approve**, and the CLI finishes signing in on its own.
+
+The login lasts 90 days, and you do not need to sign in again for routine use. It appears on **Connected agents** (in the account menu, or at `app.miramarket.org/settings/agents`) as **Miramarket CLI** followed by your computer's name. There you can change its budget or revoke it at any time.
+
+Check whether you are signed in, what the login may do, and how much of its budget is in use:
 
 ```bash
 miramarket-cli auth status
 ```
 
+To change the switches, run `miramarket-cli login --force` and approve a new login with the switches you want. Then revoke the old one on **Connected agents**.
+
+<Note>
+A login from a CLI older than 1.6.0 no longer works. Run `npm install -g @miramarket/cli` to update, then `miramarket-cli login`.
+</Note>
+
+## Update the CLI
+
+```bash
+miramarket-cli update
+```
+
+This installs the latest release with the package manager you installed it with (npm, pnpm, Yarn, or Bun), in the same place, so you don't need to run `npm install -g` again. To only check whether a newer release exists, add `--check`. Versions before 1.6.0 do not have `update`; update those once with `npm install -g @miramarket/cli`.
+
+If you run the CLI through `npx`, as a project dependency, or from source, `update` installs nothing and prints the command to run instead. If it has no permission to write to the install directory, run it again with those rights, for example `sudo miramarket-cli update`.
+
 ## Finish account setup
 
-Signing in starts a session, but two more things are required before you can trade: accepting the current Terms, Privacy Policy, and Risk Disclosure, and delegating your wallet. Check what is still needed:
+Signing in is not enough to trade. Two more things are required: accepting the current Terms, Privacy Policy, and Risk Disclosure, and delegating your wallet. Check what is still needed:
 
 ```bash
 miramarket-cli account status
@@ -50,6 +78,8 @@ This reports exactly what is missing and how to fix it. Two steps require you pe
   ```bash
   miramarket-cli account accept-policies
   ```
+
+  If you have not accepted them yet, the app also asks you to when you sign in to approve the login.
 
 - **Delegate your wallet**, by opening [app.miramarket.org](https://app.miramarket.org) and signing in once in a browser. `miramarket-cli account status` will confirm once this is done.
 
@@ -83,6 +113,14 @@ miramarket-cli strategies watch <strategyId>
 ```
 
 Add `--demo` to `post` to simulate a run instead of using real funds.
+
+A live run starts right away when it fits within the login's budget, counting the live runs it already has in the market. A run beyond the budget is saved but does not start. It waits for you to choose **Approve** on **Connected agents**, and `post` prints the command that reports where it stands:
+
+```bash
+miramarket-cli strategies approval <approvalId>
+```
+
+Once you approve it, the run starts on its own. Requests you do not answer expire after a day.
 
 ## Describe a strategy instead of writing it
 
@@ -120,9 +158,14 @@ It works for tokenized stocks and perps too, in dollars: `"buy TSLA if it crosse
 | `miramarket-cli strategies pull <strategyId> --out ./strategy.json` | Download a running strategy as JSON, with the nodes you may still change. |
 | `miramarket-cli strategies update <strategyId> ./strategy.json` | Save your changes to the future part of a running strategy. |
 | `miramarket-cli strategies exit <strategyId>` | Close out a completed strategy. |
-| `miramarket-cli account withdraw --recipient <address> --confirm` | Withdraw spendable funds to an address. |
-| `miramarket-cli bridge execute --amount 100 --direction base-to-polygon --confirm` | Move USDC between Base and Polygon ahead of time. |
-| `miramarket-cli logout` | Sign out on this machine. |
+| `miramarket-cli strategies approval <approvalId>` | Where a live run waiting for your approval stands. |
+| `miramarket-cli account withdraw --recipient <address> --confirm` | Withdraw spendable funds to an address. Needs a login with **Withdraw funds** on. |
+| `miramarket-cli bridge execute --amount 100 --direction base-to-polygon --confirm` | Move USDC between Base and Polygon ahead of time. Needs **Place orders and bridge**, and the amount must be within the budget. |
+| `miramarket-cli auth status` | Whether you are signed in, what the login may do, and its budget. |
+| `miramarket-cli update` | Update the CLI to the latest release. |
+| `miramarket-cli logout` | End this login. It is revoked on the server and removed from this machine. |
+
+A command the login was not allowed, such as `account withdraw` with **Withdraw funds** off, stops with a message that names the switch. Approve a new login with that switch on to use it.
 
 Every command supports a `--json` flag for machine-readable output, which agents and scripts should always use. Run any command with `--help` to see its full set of options. See the [CLI reference](/cli-reference) for every command, flag, JSON shape, and exit code.
 
@@ -130,6 +173,8 @@ Every command supports a `--json` flag for machine-readable output, which agents
 
 The CLI is designed so an AI coding agent (such as Claude Code) can drive it directly: run `miramarket-cli account status --json` first to confirm the account can trade, then either `miramarket-cli strategies generate "<description>" --out ./s.json --json` or `miramarket-cli schema` plus hand-authored JSON, then `validate`, `preview`, and `post`. Signing in and accepting policies still require a human — an agent should stop and ask you to complete those steps rather than attempting them.
 
-If your agent supports MCP, you can [connect it to the MCP server](/mcp-server) instead (agents: see the [MCP reference](/mcp-reference.md)): it gets the same strategy tools without shell access, and you set a budget for the live runs it may start on its own.
+An agent signs in with `miramarket-cli login --events`, which prints the link and code as soon as they exist, so the agent can show them to you while the CLI waits. You approve the login and choose its switches and budget yourself; the agent cannot change them. A live run beyond the budget waits for your approval, as described in [Post your first strategy](#post-your-first-strategy).
+
+If your agent supports MCP, you can [connect it to the MCP server](/mcp-server) instead (agents: see the [MCP reference](/mcp-reference.md)): it gets the same strategy tools without shell access, with the same budget and approvals, but it cannot place single orders, bridge, or withdraw.
 
 For the full strategy JSON format, worked examples, and the rules that determine whether a strategy actually behaves as intended (most of which `validate` can't check for you), point your agent at [/agent-strategy-guide.md](/agent-strategy-guide.md) — a single markdown file meant to be fetched and read directly, not browsed.

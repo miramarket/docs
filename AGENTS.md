@@ -22,7 +22,7 @@
 - Use "action" for what the strategy does after a rule is met. The action that moves funds back to the wallet is **Exit**; it and **Hold** sit under **Utils** in the **Condition** tab.
 - Use "recurring market" for a market family that repeats over time.
 - Use "strategy assistant" for the chatbox that builds strategies from plain English, and "featured strategy" for a ready-made strategy on the home page. Templates were removed from the app; do not document them.
-- Use "Run Simulation" for simulated runs.
+- Use **Simulate** for simulated runs: it is the button label in the builder, on featured strategies, and on the MCP strategy card.
 - Use "Run Live" for runs that can use real funds.
 - State that Polymarket is the currently supported prediction market venue, and that tokenized stocks on Base and perps on Hyperliquid are also supported as separate, non-prediction-market assets priced in dollars.
 - The app root (`app.miramarket.org`) is the home page; the canvas is at `app.miramarket.org/builder`.
