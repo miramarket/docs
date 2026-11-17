@@ -15,8 +15,8 @@ Trading involves risk, and leverage magnifies losses. A simulation (`mode: "demo
 - **Sign-in:** OAuth 2.1 with PKCE (`S256`). A request without a token gets `401` with a `WWW-Authenticate` header naming the resource metadata at `https://api.miramarket.org/.well-known/oauth-protected-resource/mcp`. The authorization server metadata is at `https://api.miramarket.org/.well-known/oauth-authorization-server`.
 - **Client identity:** a Client ID Metadata Document (preferred), or dynamic registration for public clients. A registration keeps only its loopback redirect URIs and https ones on a web AI platform's callback host (`claude.ai`, `chatgpt.com`, `grok.com`, `console.x.ai`, `www.cursor.com`), and the response lists the ones it kept; a registration with none is refused. A metadata document's redirect URIs must include at least one https or loopback URI; others, such as a custom URL scheme, are ignored. The document must allow a public client: `none` in `token_endpoint_auth_methods_supported` if it has that list, otherwise `none` or nothing in `token_endpoint_auth_method`. The client then signs in with PKCE and no client secret.
 - **Resource:** request tokens for `https://api.miramarket.org/mcp`. The authorization response includes `iss`; check that it is `https://api.miramarket.org`.
-- **Tokens:** access tokens last 15 minutes. Refresh tokens rotate on every use. Presenting a refresh token that was already used ends the whole connection.
-- **Lifetime:** a connection lasts 90 days, then the owner signs in again.
+- **Tokens:** access tokens last 15 minutes. Refresh tokens last 30 days and rotate on every use. If the answer to a refresh is lost, present the same refresh token again: it is accepted for up to a day, until a token issued for it has been used. Presenting a refresh token whose replacement was already used, or one that was replaced, ends the whole connection.
+- **Lifetime:** each refresh moves the connection's end to 90 days out, so a connection stays active while it is used. One left unused ends when its refresh token expires after 30 days, and the owner signs in again.
 
 ### Scopes
 
@@ -180,11 +180,11 @@ Checks a strategy JSON with the same validator `strategy_post` uses.
 | --- | --- | --- |
 | `strategy` | object | Required. |
 
-Returns `{ "valid": boolean, "errors": string[] }`. Passing does not mean the strategy does what was intended; `strategy_guide` topic `"json"` lists the mistakes it cannot catch.
+Returns `{ "valid": boolean, "errors": string[] }`. Besides the structure, it refuses an `ROI_PCT` take-profit no price can reach, judged from the token's best ask now: for example `+20%` on a share that costs `0.90` would need `1.08`. Lower the take-profit or leave it out, and tell the user why. Passing does not mean the strategy does what was intended; `strategy_guide` topic `"json"` lists the mistakes it cannot catch.
 
 ### `strategy_post`
 
-Validates and saves a strategy. No real money moves. Needs `strategies:write`.
+Validates and saves a strategy, refusing an unreachable `ROI_PCT` take-profit as `strategy_validate` does (a retry with an `idempotency_key` that already saved is not judged again). No real money moves. Needs `strategies:write`.
 
 | Input | Type | |
 | --- | --- | --- |
@@ -295,7 +295,7 @@ Hosts that support MCP Apps, such as Claude and ChatGPT, render the card inline:
 ## Errors and limits
 
 - **Tool error** (`isError: true`): the text explains it. For a missing scope, ask the owner to reconnect and allow it.
-- **HTTP `401`:** the access token expired or the connection ended. Refresh the token. If the refresh fails with `invalid_grant`, the connection was revoked or reached its 90 days; ask the owner to connect again.
+- **HTTP `401`:** the access token expired or the connection ended. Refresh the token. If the refresh fails with `invalid_grant`, the connection was revoked or ended; ask the owner to connect again.
 - **HTTP `429`:** too many requests. Wait for the `Retry-After` seconds.
 - **Rate limits:**
   - `/mcp`: 240 requests a minute per connection, and at most 6,000 a minute from one IP across connections.
