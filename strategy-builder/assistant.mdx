@@ -19,6 +19,10 @@ Type what you want the strategy to do, then press **Send**. Name the market, the
 
 When a buy depends on whether something happens, such as "If the Fed cuts in December, buy $25 of Micron", the buy waits for that market to resolve the way you named. It does not buy when the odds pass 50%, and if the market resolves the other way, the buy does not happen. If you mean odds, say so: "Buy Micron once a December cut passes 70%."
 
+Give an exit as a percent, such as "take profit at +20% and stop at -10%", and the assistant adds an [ROI Condition](/strategy-builder/conditions#roi-condition), which measures it from what the buy actually paid. Give it as a price, such as "sell at 70¢", and it uses that price. If a take-profit could never be reached, such as `+30%` on a share bought at `85¢` (it would need more than `$1`), the assistant leaves it out and says why.
+
+You do not have to give an exit. A prediction market bought with no exit is held until it resolves. A perp or a stock with no exit is closed as soon as the run completes, which is right after the buy, so to hold one, give it a deadline ("until Dec 5"), a stop, or a take-profit.
+
 The chatbox suggests a few sample prompts to start from. Click one to send it.
 
 The assistant keeps strategies simple unless you ask for more: a few conditions and up to two markets. Ask for a detailed or hedged strategy if you want more steps. When you name the position yourself, it adds only the exits you asked for.
@@ -42,6 +46,8 @@ You do not have to choose the market yourself. Describe a news situation or an e
 2. It finds the markets the situation could move.
 3. It designs a strategy from what it read, on two venues when the situation has markets on both (for example, a Polymarket market and a Hyperliquid perp).
 
+The strategy buys as soon as it starts. A market it watches is usually an exit that sells if the situation turns against the trade, not a condition the buy waits for. It waits before buying only when you ask it to, for example "once the merger passes 65%, buy Tesla".
+
 Its reply is two sentences: why it chose these markets, then what the strategy does. Check that the reasoning matches your view of the situation before you run it.
 
 ## Answer its questions
@@ -49,6 +55,8 @@ Its reply is two sentences: why it chose these markets, then what the strategy d
 When a request could mean several markets, the assistant asks which one you meant. It shows the candidate markets grouped by event, or the different ways it could read your request. Select one and click **Confirm**.
 
 If something is missing, such as a price or a side, it asks for it instead of guessing. Reply in the chatbox.
+
+If the event you name is already over, such as an election that has been held, the assistant tells you instead of building on a different market.
 
 ## Edit or explain the current strategy
 
@@ -65,7 +73,9 @@ The last three are offered as suggestions once a strategy exists.
 
 ## Use the strategy it builds
 
-A built strategy appears in the conversation under **Strategy created**, drawn as a small graph of its first steps. Click **+N more steps** to see the rest.
+A built strategy appears in the conversation under **Strategy created**. When one short sentence can say what it does, it reads as that sentence, for example "`LONG` `$10` of BTC at `2x`, exit below `$60,000`." Otherwise it is drawn as a small graph of its first steps; click **+N more steps** to see the rest.
+
+In the sentence, a perp or a stock appears as its ticker with its live price. Hover over a `YES` or `NO` to see that side's current price.
 
 - **Amount**: type to change how much the strategy starts with.
 - **Run control**: **Simulate**, or **Run Live** from its menu, runs the strategy from the conversation.
