@@ -271,7 +271,7 @@ Exit codes: `0` for every `result`, `3` auth error, `4` generation failed, `5` b
 
 ### `miramarket-cli validate <file> [--json]`
 
-Validates a strategy JSON file's structure, including where each `ROI_PCT` condition sits (under the `BUY` it measures, watching that `BUY`'s token). Once the structure is valid, it also refuses an `ROI_PCT` take-profit that no price can reach, judged from the token's best ask now (a token it cannot price within 5 seconds is not judged); see rule 2 of the [agent strategy guide](/agent-strategy-guide.md). Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
+Validates a strategy JSON file's structure, including where each `ROI_PCT` condition sits (under the `BUY` it measures, watching that `BUY`'s token). Once the structure is valid, it also refuses an `ROI_PCT` take-profit that no price can reach, judged from the token's best ask now, or from the level of the price condition the buy waits on when that is its only condition and it watches the same token (a buy behind any other condition, or a token it cannot price within 5 seconds, is not judged); see rule 2 of the [agent strategy guide](/agent-strategy-guide.md). Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
 
 ```json
 {
