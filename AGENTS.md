@@ -45,7 +45,7 @@
 - Do not document Convex internals.
 - Do not document backend implementation details.
 - For the CLI and MCP server: document installation, authentication, account setup, and the everyday command/tool surface a user or agent needs. `cli.mdx` is that summary. `cli-reference.mdx` is the one page that carries the full command reference (flags, JSON shapes, exit codes) so agents have a single fetchable source; keep it factual and do not copy test/CI documentation or internal implementation notes from the source repository's own READMEs.
-- Describe signing in and adding funds factually (sign in, then deposit by card, exchange transfer, or wallet transfer) without asserting a custodial or non-custodial claim, and note that it is separate from starting a live run.
+- Describe signing in and adding funds factually (sign in, then **Deposit** crypto from an exchange or wallet on a chosen network, or **Buy** with a card or bank transfer) without asserting a custodial or non-custodial claim, and note that it is separate from starting a live run.
 - Do not imply that execution or fills are guaranteed. When you document perps, state that leverage magnifies losses and that a position can be liquidated.
 - Do not document unrelated app, service, monitoring, deployment, or internal testing details.
 - If a screenshot would help, use a real app screenshot with a clear highlight or caption.
