@@ -13,7 +13,7 @@ Use this glossary when a word in the builder is unfamiliar.
 | Canvas | The workspace where strategy nodes and their order appear. |
 | Cash | The money in your account that is not committed to a running strategy, including your free balance on Hyperliquid. |
 | Close time | The time when a market stops accepting activity. It can differ from the time the market resolves. |
-| Condition | A node that checks a price, time, or resolution rule before the strategy continues. |
+| Condition | A node that checks a price, return, time, or resolution rule before the strategy continues. |
 | Exit | A **Utils** action that moves its allocation out of the current position and back to your wallet, for example to take profit or stop a loss. |
 | Featured strategy | A ready-made strategy shown on the home page, usually built around a recent news story. You can open it on the canvas or run it directly. |
 | Funding | A payment between perp longs and shorts every hour while a position is open. |
@@ -35,6 +35,8 @@ Use this glossary when a word in the builder is unfamiliar.
 | Price Condition | A condition that checks a selected market side, stock, or perp against a price threshold. |
 | Recurring market | A market family that repeats on a schedule, such as `5m` or daily. |
 | Resolution | A condition that branches according to a selected market outcome. |
+| ROI | Return on investment: how much a position has gained or lost, in percent of what its buy cost, including the fee paid to buy. A perp's ROI is on its margin. |
+| ROI Condition | A condition below a market action that continues when that position's return reaches a percent, such as `+20%` for a take-profit or `-10%` for a stop-loss. |
 | Run Live | An available run type that can use real funds. Execution and fills are not guaranteed. |
 | `SHORT` | The perp side that gains when the price falls. |
 | Sign in | The top-bar button used to set up your Miramarket account, required before you run a strategy or use the assistant. Signing in and adding funds does not start a live run. |

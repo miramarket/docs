@@ -69,6 +69,8 @@ A perp has no close time and never resolves, so a **Time Condition** or **Resolu
 
 For a short, a stop-loss is a price **above** where you entered. For a long, it is a price **below**.
 
+To exit at a percent instead of a price, add an [ROI Condition](/strategy-builder/conditions#roi-condition) below the perp action. Its percent is the return on your margin, so leverage scales it: at `5x`, "ROI reaches `+10%`" is a 2% move in the price your way. Use `+` for a take-profit and `-` for a stop-loss on both a `LONG` and a `SHORT`.
+
 ## Costs and risks
 
 - **Minimum order.** Each perp order needs at least `$10` of position size: the amount times the leverage. A branch that would open less than that is skipped and no order is placed. Raise the allocation or the leverage. Closing a whole position is exempt.

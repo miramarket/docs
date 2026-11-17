@@ -36,7 +36,7 @@ Verify the active window before you run. See [Recurring markets](/strategy-build
 
 **Exit** moves its allocation out of the strategy's current position and back to your wallet.
 
-- After a market action and a condition, Exit closes that share of the position: a take-profit when the condition waits for a gain, or a stop-loss when it waits for a fall. For a perp, it closes the position and returns the margin plus or minus your profit or loss.
+- After a market action and a condition, Exit closes that share of the position: a take-profit when the condition waits for a gain, or a stop-loss when it waits for a fall. The condition can be a price, or an [ROI Condition](/strategy-builder/conditions#roi-condition) such as `+20%` or `-10%`. For a perp, it closes the position and returns the margin plus or minus your profit or loss.
 - In a split, Exit keeps that share of the available amount in your wallet instead of trading it.
 
 **Sign in** and an Exit action are different:
