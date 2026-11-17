@@ -19,7 +19,7 @@ Type what you want the strategy to do, then press **Send**. Name the market, the
 
 When a buy depends on whether something happens, such as "If the Fed cuts in December, buy $25 of Micron", the buy waits for that market to resolve the way you named. It does not buy when the odds pass 50%, and if the market resolves the other way, the buy does not happen. If you mean odds, say so: "Buy Micron once a December cut passes 70%."
 
-Give an exit as a percent, such as "take profit at +20% and stop at -10%", and the assistant adds an [ROI Condition](/strategy-builder/conditions#roi-condition), which measures it from what the buy actually paid. Give it as a price, such as "sell at 70¢", and it uses that price. If a take-profit could never be reached, such as `+30%` on a share bought at `85¢` (it would need more than `$1`), the assistant leaves it out and says why.
+Give an exit as a profit or loss in percent, such as "take profit at +20% and stop at -10%" or "sell once I'm up 15%", and the assistant adds an [ROI Condition](/strategy-builder/conditions#roi-condition), which measures it from what the buy actually paid. Give it as a price, such as "sell at 70¢", and it uses that price. A move in the price, such as "close it if BTC drops 5%", is a price level worked out from the price when the strategy is built. If a take-profit could never be reached, such as `+30%` on a share bought at `85¢` (it would need more than `$1`), the assistant leaves it out and says why.
 
 You do not have to give an exit. A prediction market bought with no exit is held until it resolves. A perp or a stock with no exit is closed as soon as the run completes, which is right after the buy, so to hold one, give it a deadline ("until Dec 5"), a stop, or a take-profit.
 
