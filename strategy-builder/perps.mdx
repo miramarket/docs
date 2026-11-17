@@ -69,6 +69,8 @@ A perp has no close time and never resolves, so a **Time Condition** or **Resolu
 
 For a short, a stop-loss is a price **above** where you entered. For a long, it is a price **below**.
 
+To exit at a percent instead of a price, add an [ROI Condition](/strategy-builder/conditions#roi-condition) below the perp action. Its percent is the return on your margin, so leverage scales it: at `5x`, "ROI reaches `+10%`" is a 2% move in the price your way. Use `+` for a take-profit and `-` for a stop-loss on both a `LONG` and a `SHORT`.
+
 ## Costs and risks
 
 - **Minimum order.** Each perp order needs at least `$10` of position size: the amount times the leverage. A branch that would open less than that is skipped and no order is placed. Raise the allocation or the leverage. Closing a whole position is exempt.
@@ -85,7 +87,7 @@ Your free balance on Hyperliquid counts as **Cash** in the account menu. A withd
 
 ## Simulation and Run Live
 
-**Simulate** supports perps. A simulated perp order fills at the midpoint price, with no spread, trading fees, or funding, so a live run can do worse than its simulation.
+**Simulate** supports perps. A simulated perp order fills at the midpoint price, with no spread, trading fees, or funding, so a live run can do worse than its simulation. Simulated Polymarket trades, by contrast, do pay the market's trading fee.
 
 Live perp trading is not available in some regions, including the United States. Where live trading is unavailable, the run menu shows **Run Live** as disabled and Simulation remains available.
 

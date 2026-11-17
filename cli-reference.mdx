@@ -41,7 +41,7 @@ Prefer branching on `code` over parsing `error` text — `error` wording can cha
 | 4 | Server failure (upstream error, geo-restricted, timeout) |
 | 5 | Bad input (missing file, malformed JSON, missing/invalid flags) |
 
-`code` values include `NOT_AUTHENTICATED`, `LOGIN_DENIED`, `LOGIN_CODE_EXPIRED`, `LOGIN_OUTDATED`, `LOGIN_NOT_ALLOWED`, `FORBIDDEN`, `VALIDATION_ERROR`, `INPUT_ERROR`, `SERVER_ERROR`, `PARSE_ERROR`, `STRATEGY_NOT_FOUND`, `REGION_RESTRICTED`, `WALLET_NOT_DELEGATED`, `WATCH_TIMEOUT`, `INVALID_STRATEGY_STATE`, `NO_ACTIVE_RUN`, `LOCKED_NODE_EDIT`, `UNSUPPORTED_FIELD`, `RUN_EDIT_REJECTED`, `IDEMPOTENCY_KEY_REUSED`, `APPROVAL_NOT_FOUND`, and more — this set grows over time, so don't treat it as closed.
+`code` values include `NOT_AUTHENTICATED`, `LOGIN_REFRESH_FAILED`, `LOGIN_DENIED`, `LOGIN_CODE_EXPIRED`, `LOGIN_OUTDATED`, `LOGIN_NOT_ALLOWED`, `FORBIDDEN`, `VALIDATION_ERROR`, `INPUT_ERROR`, `SERVER_ERROR`, `PARSE_ERROR`, `STRATEGY_NOT_FOUND`, `REGION_RESTRICTED`, `WALLET_NOT_DELEGATED`, `WATCH_TIMEOUT`, `INVALID_STRATEGY_STATE`, `NO_ACTIVE_RUN`, `LOCKED_NODE_EDIT`, `UNSUPPORTED_FIELD`, `RUN_EDIT_REJECTED`, `IDEMPOTENCY_KEY_REUSED`, `APPROVAL_NOT_FOUND`, and more — this set grows over time, so don't treat it as closed.
 
 ## Sign-in commands
 
@@ -59,7 +59,7 @@ On that page the account owner signs in, checks the code, and chooses what this 
 | **Place orders and bridge** | `orders` | on | `trade`, `order cancel`, and `bridge execute`. Each buy or bridge up to the budget; sells are never capped. |
 | **Withdraw funds** | `withdraw` | off | `account withdraw`, to any address, with no limit. |
 
-The budget (default `$100`) is one dollar amount for both live runs and single orders. The login lasts 90 days and appears on **Connected agents** (`https://app.miramarket.org/settings/agents`) as **Miramarket CLI** followed by the computer's name, where the owner can change its budget or revoke it.
+The budget (default `$100`) is one dollar amount for both live runs and single orders. The login stays active while it is used and ends after 30 days without use. It appears on **Connected agents** (`https://app.miramarket.org/settings/agents`) as **Miramarket CLI** followed by the computer's name, where the owner can change its budget or revoke it.
 
 | Flag | Description |
 | --- | --- |
@@ -224,9 +224,9 @@ Text-to-strategy. Describe what the strategy should do in plain English and get 
 
 `result` is one of four values. `ok` is `true` for all of them, because each is a real outcome rather than a failure:
 
-- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), `thesis`, and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg and a [perp](#hyperliquid-perp-commands) as a `HYPERLIQUID` leg, both with `PRICE_USD` conditions in dollars, ready to post. By default a trade named on one venue also gets one related position on another venue for 30% of the budget, named in `notices` (as in the example below); a prompt with "just", "only", or "nothing else" keeps one venue, and a notice says when the strategy stays on one venue and why.
+- `strategy` — built. `strategyPath` or `strategy`, plus `markets[]` (what it trades, with the price the generator saw), `stats`, `notices[]`, `unmatched[]`, `changeSummary[]` (edits only), `thesis`, and `nextCommands[]`. A non-empty `unmatched` means something the prompt named was substituted or left out; read it before posting. A [tokenized stock](#tokenized-stock-commands) comes back as a `BASE_STOCKS` leg and a [perp](#hyperliquid-perp-commands) as a `HYPERLIQUID` leg, both with `PRICE_USD` conditions in dollars, ready to post. An exit asked for as a profit or loss in percent ("take profit at +20%, stop at -10%", "once I'm up 15%") comes back as an `ROI_PCT` condition under its buy; a percent move in the price ("if BTC drops 5%") comes back as a price level. A take-profit no price can reach is left out, and a notice says so. By default a trade named on one venue also gets one related position on another venue for 30% of the budget, named in `notices` (as in the example below); a prompt with "just", "only", or "nothing else" keeps one venue, and a notice says when the strategy stays on one venue and why.
 
-  `thesis` is set when the prompt asked what to trade about a situation, event, or asset instead of choosing the position ("build a strategy around this week's Fed meeting"). The command researched the news and the markets it moves first, and `thesis` says what the strategy bets on (`bet`), whether it bets with or against the situation (`stance`: `WITH_SITUATION`, `CONTRARIAN`, or `MIXED`), why each market is in it (`legs[]`), what the strategy does (`rules[]`), what would break it (`breaks_if`), the headlines it rests on (`news[]`), and a two-sentence `summary`. Without `--json` the summary prints as a short note. `thesis` is `null` for every other prompt.
+  `thesis` is set when the prompt asked what to trade about a situation, event, or asset instead of choosing the position ("build a strategy around this week's Fed meeting"). The command researched the news and the markets it moves first, and `thesis` says what the strategy bets on (`bet`), whether it bets with or against the situation (`stance`: `WITH_SITUATION`, `CONTRARIAN`, or `MIXED`), why each market is in it (`legs[]`), what the strategy does (`rules[]`), what would break it (`breaks_if`), the headlines it rests on (`news[]`), and a two-sentence `summary`. Without `--json` the summary prints as a short note. A researched strategy buys when it starts, and a market it watches is usually an exit; it waits for a condition before buying only when the prompt asks it to wait. `thesis` is `null` for every other prompt.
 - `market_selection` — the request was ambiguous between several markets. `candidates[]` is numbered (`choice`) and the question is saved locally under `selectionId`. When `resumable` is `true`, answer with `strategies generate --choose <marketId|choice> --selection <selectionId>` on the next call; at an interactive terminal the choice is prompted for in place instead. When `resumable` is `false` the question cannot be answered with a choice (the request was an edit, or it named several markets) and `reason` says so; re-run with a prompt that names the market precisely. Any new prompt discards the saved question. A candidate can also be one reading of a vague request rather than a market: it has `outcome` and `venue` set to `OPTION` and its `title` is the reading. Choose it the same way.
 - `clarification` — nothing was built; `question` says what is missing. Re-run with a prompt that answers it.
 - `answer` — the prompt was a question rather than a build request; `answer` is the reply.
@@ -271,7 +271,7 @@ Exit codes: `0` for every `result`, `3` auth error, `4` generation failed, `5` b
 
 ### `miramarket-cli validate <file> [--json]`
 
-Validates a strategy JSON file's structure. Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
+Validates a strategy JSON file's structure, including where each `ROI_PCT` condition sits (under the `BUY` it measures, watching that `BUY`'s token). Once the structure is valid, it also refuses an `ROI_PCT` take-profit that no price can reach, judged from the token's best ask now, or from the level of the price condition the buy waits on when that is its only condition and it watches the same token (a buy behind any other condition, or a token it cannot price within 5 seconds, is not judged); see rule 2 of the [agent strategy guide](/agent-strategy-guide.md). Exit `0` valid, `2` validation errors, `5` bad input (missing file, malformed JSON).
 
 ```json
 {
@@ -286,7 +286,7 @@ Validates a strategy JSON file's structure. Exit `0` valid, `2` validation error
 
 ### `miramarket-cli preview <file> [--json]`
 
-Summarizes a strategy without contacting the server — node/edge counts, required principal, and `warnings[]` for anything that will be silently dropped or misbehave at import.
+Summarizes a strategy without contacting the server — node/edge counts, required principal, and `warnings[]` for anything that will be silently dropped or misbehave at import, including any `PNL_USD` condition (compared as a raw value). `ROI_PCT` is not warned on: Miramarket arms it from the real fill of the `BUY` above it.
 
 ### `miramarket-cli edit <file> [flags]`
 
@@ -307,7 +307,7 @@ miramarket-cli edit ./strategy.json --unset nodes[1].action.risk_guards
 
 ### `miramarket-cli post <file> [flags]`
 
-Validates and posts a strategy, then starts a run (unless `--no-start`). A live (non-demo) run is judged against the login's budget: within it, the run starts at once after a Polymarket market-health and balance check; beyond it, nothing starts and the strategy waits for the account owner's approval on Connected agents (below). Demo posts need only **Create strategies** and skip the health check.
+Validates and posts a strategy, then starts a run (unless `--no-start`). Like `validate`, it refuses an `ROI_PCT` take-profit that no price can reach (exit `2`), except on a retry whose `--idempotency-key` already posted. A live (non-demo) run is judged against the login's budget: within it, the run starts at once after a Polymarket market-health and balance check; beyond it, nothing starts and the strategy waits for the account owner's approval on Connected agents (below). Demo posts need only **Create strategies** and skip the health check.
 
 | Flag | Description |
 | --- | --- |
@@ -602,7 +602,7 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | `order status [orderId]` | Status of one order, or all open orders if omitted. |
 | `order cancel <orderId> --confirm` | Cancels an open GTC order. Needs **Place orders and bridge**. |
 | `balance [--chain base\|polygon\|all]` | USDC balance per chain, plus `cash` (gross minus locked/pending). The free Hyperliquid perps balance appears as a `hyperliquid` entry and counts toward the total and `cash`; margin backing open perp positions does not. |
-| `portfolio [--venue polymarket\|base-stocks\|all]` | Balances, open orders, settled positions, tokenized stock holdings, capital reservations. Perp positions are listed by `perps positions`, not here. |
+| `portfolio [--venue polymarket\|base-stocks\|all]` | Balances, open orders, settled positions, tokenized stock holdings, capital reservations. Perp positions are listed by `perps positions`, not here. `settledPositionsUnavailable: true` means the Polymarket holdings could not be read, not that there are none. |
 
 ## Strategy management commands
 
@@ -726,4 +726,6 @@ Shows local CLI state: auth, last strategy worked on, last post result, remainin
 
 ## Session lifetime
 
-The cached access token lasts 15 minutes, but the CLI also caches a 30-day refresh token (rotated on every use) and silently redeems it at the start of every command — there's no re-login to babysit, on a laptop or an unattended server alike, until the login ends 90 days after it was approved. If the login is revoked (on Connected agents or with `logout`) or has ended, the next command reports `NOT_AUTHENTICATED` and you run `miramarket-cli login` again.
+The cached access token lasts 15 minutes, but the CLI also caches a 30-day refresh token (rotated on every use) and silently redeems it at the start of every command, and again before any request a long-running command such as `strategies watch` makes after the token has run out. There's no re-login to babysit, on a laptop or an unattended server alike, for as long as the login is used at least once every 30 days: each refresh moves the login's end date to 90 days out. A refresh whose answer is lost (a timeout, or a command killed mid-refresh) does not end the login; the next command presents the same refresh token again and it is accepted, for up to a day.
+
+If the login is revoked (on Connected agents or with `logout`) or has ended, the next command reports `NOT_AUTHENTICATED` (exit `3`) with the reason, and you run `miramarket-cli login` again. If the login could not be renewed only because Miramarket was unreachable or slow, the command reports `LOGIN_REFRESH_FAILED` (exit `4`) instead: the login is still valid, so retry the command and do not log in again.

@@ -25,7 +25,9 @@ Before you start, review:
 
 Simulation follows the settings you supplied. It can reveal an incomplete or invalid strategy, but it cannot decide whether those settings match your trading idea.
 
-A simulation is more forgiving than a live run. For example, a simulated perp order fills at the midpoint price with no spread, trading fees, or funding.
+A simulated Polymarket trade pays the market's trading fee, on the buy and on the sale, worked out from the fee schedule the market publishes. Its profit or loss is therefore after fees, and the run page notes **Includes estimated trading fees.** A live run records the fee actually charged.
+
+A simulation is still more forgiving than a live run in other ways. For example, a simulated perp order fills at the midpoint price with no spread, trading fees, or funding.
 
 ## Run Live
 
@@ -37,15 +39,14 @@ Before a live run starts, Miramarket asks you to confirm. Live trades do not nec
 
 Use **Sign in** in the top bar when you are ready to run a strategy. Miramarket sets up your account, powered by [Privy](https://privy.io).
 
-Once you are signed in, the account menu shows your **Cash** and **Portfolio**, and holds **Deposit**, **Withdraw**, **Referrals**, and **Sign out**.
+Once you are signed in, the account menu shows your **Cash** and **Portfolio**, and holds **Deposit**, **Withdraw**, **Referrals**, **Connected agents**, and **Sign out**.
 
-Add funds from **Deposit**:
+Add funds from **Deposit**. It has two tabs:
 
-<img src="/images/tutorial/deposit-modal.png" alt="Add funds dialog with Pay with card, Transfer from an exchange, and Transfer from a wallet shown" />
+- **Deposit** sends crypto you already hold. Under **Deposit from**, choose the network you are sending on, such as Ethereum, Solana, Polygon, or Base. The dialog shows that network's address, a QR code, and the tokens it accepts. Send from any exchange or wallet. What arrives is converted to cash, usually within a few minutes, and the dialog tells you when the deposit has arrived. On Base, send only USDC.
+- **Buy** pays with a card or a bank transfer. Enter an amount, then choose how to pay.
 
-- Pay with card
-- Transfer from an exchange
-- Transfer from a wallet
+Hyperliquid and Tron are not deposit networks. To deposit funds you hold on Hyperliquid, first withdraw them from Hyperliquid to another network, such as Arbitrum, and send them from there.
 
 Adding funds does not start a live run; you must separately choose and confirm **Run Live**.
 

@@ -12,6 +12,7 @@ You can also describe any of these patterns to the [strategy assistant](/strateg
 | Start here if you want to... | Try this example |
 | --- | --- |
 | Wait for one price | [Wait for a price threshold](#wait-for-a-price-threshold) |
+| Take profit or stop a loss at a percent | [Take profit and stop out by ROI](#take-profit-and-stop-out-by-roi) |
 | Act at a planned time | [Act at a time](#act-at-a-time) |
 | Divide an amount | [Split between a market and Exit](#split-between-a-market-and-exit) |
 | Keep a position open | [Hold before another check](#hold-before-another-check) |
@@ -30,6 +31,19 @@ Use this when you want a selected side to reach a specific displayed price befor
 5. Run a simulation.
 
 Plain meaning: when the selected side reaches your threshold, the strategy tries to buy that side.
+
+## Take profit and stop out by ROI
+
+Use this when you want to sell a position at a percent gain or loss instead of at a price you work out yourself.
+
+1. Add a market action for the side you want to buy.
+2. Open **Condition** and add **ROI Condition** below the market action. It starts at "ROI reaches `+20%`". Click the number to change it.
+3. Add **Exit** after it with a `100%` allocation.
+4. Add a second **ROI Condition** below the same market action. Click `+` to switch it to `-`, then set the amount, such as `10%`.
+5. Add **Exit** after it with a `100%` allocation.
+6. Run a simulation.
+
+Plain meaning: the strategy buys, then sells everything once the position is up 20% or down 10%, whichever comes first. The return is measured from what the buy actually paid, including its trading fee, so on Polymarket a new position starts about 3–4% down. Keep a Polymarket stop at `-8%` or beyond, or it can sell right after the buy. See [ROI Condition](/strategy-builder/conditions#roi-condition).
 
 ## Continue after a market action
 
@@ -130,6 +144,8 @@ Use this when you want a leveraged position that closes itself if the price fall
 3. Add a **Price Condition** below the action that watches the same perp, with "less than" and a dollar price below your entry.
 4. Add **Exit** after that condition with a `100%` allocation.
 5. Run a simulation.
+
+To set the stop as a percent instead, use an **ROI Condition** below the action, such as "ROI reaches `-20%`". On a perp the percent is of your margin: at `2x`, `-20%` is a 10% fall in the price.
 
 Plain meaning: the strategy opens a long position and closes it if the price falls to your stop. Keep the stop well before the position's liquidation price, or the exchange may close the position first. See [Costs and risks](/strategy-builder/perps#costs-and-risks) for how far that is for each kind of perp. For a `SHORT`, set the stop with "greater than" at a price above your entry. See [Perps](/strategy-builder/perps).
 

@@ -11,7 +11,8 @@ Nodes are the building blocks on your canvas. Conditions decide when a strategy 
 
 | Node | Type | Where to find it | Use it when | You choose |
 | --- | --- | --- | --- | --- |
-| **Price Condition** | Condition | **Condition** tab | A market, stock, or perp price must reach a threshold. | The metric, comparison, value, and market to watch. |
+| **Price Condition** | Condition | **Condition** tab | A market, stock, or perp price must reach a threshold. | The comparison, value, and market to watch. |
+| **ROI Condition** | Condition | **Condition** tab | A position should be sold at a percent gain or loss. | `+` or `-` and the percent. It measures the buy above it. |
 | **Time Condition** | Condition | **Condition** tab | A strategy should continue before close or at a chosen time. | A market and either a before-close offset or date and time. |
 | **Resolution** | Condition | **Condition** tab | The next step depends on how a market resolves. | The market and the result to follow. |
 | Market action | Action | **Market** tab | You want to buy a market side, a stock, or open a perp position. | The outcome and `YES` or `NO`, the stock, or the perp and `LONG` or `SHORT`, plus the allocation. |
@@ -32,10 +33,13 @@ When one condition leads to several actions, those actions share the available a
 | --- | --- | --- |
 | Wait for a side to reach a threshold | **Price Condition** | "When `YES` is above `60¢`, buy." |
 | Wait for a stock or perp price | **Price Condition** | "When BTC is below `$80,000`, exit." |
+| Take profit or stop a loss at a percent | **ROI Condition** | "When ROI reaches `+20%`, exit." |
 | Wait until shortly before close | **Time Condition** | "Ten minutes before close, continue." |
 | Wait for a final result | **Resolution** | "If the selected outcome resolves `YES`, follow this path." |
 
 Price Condition can watch the market you are about to trade, a market from an earlier step, or another market you select. The market displayed inside the condition is the one being watched. It is not a second purchase.
+
+ROI Condition has no market to choose. It goes below a market action, or a **Hold** of that position, and measures that position's return.
 
 Read [Conditions](/strategy-builder/conditions) for setup details.
 
@@ -46,7 +50,7 @@ Read [Conditions](/strategy-builder/conditions) for setup details.
 | Enter a prediction-market position | Market action | "Buy `YES` on the selected outcome." |
 | Buy a tokenized stock | Market action | "Buy TSLA." |
 | Go long or short on a perp | Market action | "Open a `SHORT` on ETH at `3x`." |
-| Take money out of a position | **Exit** | "Exit 50% when the price reaches `75¢`." |
+| Take money out of a position | **Exit** | "Exit 50% when the price reaches `75¢`," or "Exit when ROI reaches `-10%`." |
 | Keep exposure instead of changing it | **Hold** | "Keep 50% in the current market." |
 
 Read [Actions](/strategy-builder/actions) for allocation and continuation examples, and [Perps](/strategy-builder/perps) for leverage.

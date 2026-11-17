@@ -73,17 +73,25 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 
 ### What `validate` checks — and what it doesn't
 
-`miramarket-cli validate ./strategy.json --json` catches structural problems fast: missing required fields, duplicate IDs, `allocation_pct` sums that aren't exactly 100, edges that don't go `ACTION -> CONDITION`, cycles, and unreachable nodes. It has **no idea what you meant** — it cannot tell you that a condition will never fire, or that an action will be funded with $0. The rules below cover exactly that gap.
+`miramarket-cli validate ./strategy.json --json` catches structural problems fast: missing required fields, duplicate IDs, `allocation_pct` sums that aren't exactly 100, edges that don't go `ACTION -> CONDITION`, cycles, and unreachable nodes. It also checks where each `ROI_PCT` condition sits: one with no `BUY` above it, watching a different token from that `BUY`, or at or below `-100` is rejected, and so is an `ROI_PCT` take-profit no price can reach, judged from the market's price now (rule 2). Beyond that it has **no idea what you meant** — it cannot tell you that a condition will never fire, or that an action will be funded with $0. The rules below cover exactly that gap.
 
 ## Rules for a strategy that actually behaves as intended
 
 **1. Capital only threads through a `HOLD` action, never a `BUY`.** A `BUY`'s own outgoing edge forwards $0 to whatever it points at, unless the immediate next step is a `SELL` — a `BUY` converts cash into a position, so there's nothing left to hand forward. A `HOLD` passes its capital through unchanged. So: every non-final tier of a ladder — whether you're scaling *into* a position or taking profit in stages on the way *out* — must compile as a paired `SPLIT_100` decision: `[BUY-or-MOVE_TO_WALLET this tier's share, HOLD the remainder]`, with the next tier's condition chained off the `HOLD`, never off the sibling that traded. Also: `allocation_pct` is always a share of the capital that actually reaches that node (what the parent passed down), never a share of `initial_principal_usd` directly. If a later tier should represent "45% of the original principal" and an earlier tier already took 30%, that tier's `allocation_pct` is `45 / (100 - 30) * 100 ≈ 64.3`, not `45`.
 
-**2. Never author `signal: "ROI_PCT"` or `"PNL_USD"`.** Every condition is evaluated as a raw absolute value at runtime — there is no way to anchor a threshold to a fill price at the condition-authoring layer. Convert an ROI or PnL target to an absolute price *before* authoring: `entry_price * (1 + roi_pct / 100)`, clamped to `[0.01, 0.99]`, using `IMPLIED_PROBABILITY` as the signal. Use the entry's own trigger threshold as `entry_price` when the entry is itself gated by a price crossing on the same market and side; otherwise use the market's current price.
+**2. A percent return is `signal: "ROI_PCT"`. Author it directly; never convert it to a price yourself, and never author `"PNL_USD"`.** `ROI_PCT` is the percent return on the position bought **above** the condition: `"threshold": 20` is +20%, `-10` is -10%. Miramarket turns it into a price when the condition is armed, from the buy's real fill, so the entry price you see while authoring does not matter.
+
+- **Where it goes.** Chain the condition under the `BUY` it measures (directly, or under a `HOLD` of that position) and give it the same `watch` — venue, `market_id`, `outcome_token`, and `token_id` — as that `BUY`'s target. `validate` rejects it at the root, under an exit, or watching another token.
+- **What is counted.** What the buy paid for its shares **plus the venue's fee on that fill**, against what the position would sell for at the best bid (what a sale gets, not the midpoint). The exit's own fee is **not** counted, so realized profit lands a little under the percent (on Polymarket by roughly the taker fee on the sale, largest near 0.50). Say so if the user needs a hard minimum; nothing in this format guarantees net realized profit.
+- **Direction is the same on every side.** `CROSS_ABOVE` with a positive percent is a take-profit, `CROSS_BELOW` with a negative percent is a stop — for `YES`, `NO`, a stock, a `LONG` perp, and a `SHORT` perp alike. On a perp it is the return on **margin**: at 5x, +10% is a 2% price move, and the direction is mirrored for a short.
+- **A stop tighter than the entry fee fires at once.** The fee is part of the cost, so a fresh position starts a few percent down (about 3–4% on Polymarket, well under 1% on a stock or a perp). Keep a Polymarket stop at `-8%` or beyond unless the user gave a literal number.
+- **An unreachable take-profit is refused.** +20% on a 0.90 fill needs a price of 1.08, which a share never reaches, so it would never fire. `validate` and `post` (MCP: `strategy_validate` and `strategy_post`) refuse a prediction-market take-profit at or past `100 × (1 / entry - 1)`% (the return at $1, in the same whole percent as the threshold: `100` at an entry of `0.50`), the entry being the token's best ask now, or the level of the price condition the buy waits on when that is its only condition and it watches the same token (a buy behind any other condition is not judged), and a `SHORT` perp's take-profit at `100 × leverage`% or more (the price would have to reach zero). Lower it, or leave the exit out and tell the user why. A keyed retry of a post that already went through is not judged again.
+- **Exits about another market, or a level the user stated as a price,** stay price conditions (`IMPLIED_PROBABILITY`, or `PRICE_USD` on a stock or perp). "Sell if it reaches 70%" is a price; "sell when I'm up 20%" is `ROI_PCT`.
+- **`PNL_USD` is not supported at runtime** — it is compared as a raw absolute value, and `preview` warns on it. For a total-dollar target ("exit once I'm up $50"), use `ROI_PCT` with `roi_pct = target_usd / capital_reaching_the_buy × 100` (up $50 on a $250 buy is `20`). It is approximate — the buy can spend slightly less than it was handed, and the exit fee is not counted — so tell the user the percent you used.
 
 **3. Side and leg selection.** The side (`YES`/`NO`) for a given market reference comes from what was actually stated for *that* reference — never assume one direction applies across every market in a multi-leg strategy. The leg (which specific market, when an event has several — e.g. "above $120k" vs. "above $130k") must match what was actually asked for; don't substitute a similarly-numbered leg in the opposite direction just because it's close. A useful sanity check: an entry priced below 3¢ or above 97¢ almost always means the wrong leg or side was picked, not a genuinely extreme trade.
 
-**4. `CROSS_ABOVE`/`CROSS_BELOW` fires the instant it's already true.** There's no "must actually observe a transition" semantics — if the market is already past your threshold when the strategy activates, the condition fires immediately, which is indistinguishable from an unconditional buy. A threshold only a cent or two from the current price has the same practical effect. Unless a literal number was requested, use a floor of `anchor + (1 - anchor) / 2` for `CROSS_ABOVE` or `anchor / 2` for `CROSS_BELOW` (anchor = current price for a fresh entry, or the entry's own threshold for a chained exit on the same market).
+**4. `CROSS_ABOVE`/`CROSS_BELOW` fires the instant it's already true.** There's no "must actually observe a transition" semantics — if the market is already past your threshold when the strategy activates, the condition fires immediately, which is indistinguishable from an unconditional buy. A threshold only a cent or two from the current price has the same practical effect. Unless a literal number was requested, use a floor of `anchor + (1 - anchor) / 2` for `CROSS_ABOVE` or `anchor / 2` for `CROSS_BELOW` (anchor = current price for a fresh entry, or the entry's own threshold for a chained exit on the same market; an `ROI_PCT` exit needs no anchor, see rule 2).
 
 **5. Chained same-direction thresholds on one market must be monotone.** A later `CROSS_ABOVE` stage needs a strictly higher threshold than every earlier `CROSS_ABOVE` stage watching the same market (mirror the logic for `CROSS_BELOW`) — the chain only reaches the later stage after the earlier one already fired, so a non-monotone threshold can never trigger.
 
@@ -95,7 +103,7 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 
 **9. A sole exit must take 100%.** If a `MOVE_TO_WALLET`/`SELL` is the only way out of a position, its `allocation_pct` must be 100 — a partial sole exit leaves the rest with no exit ever registered for it. A partial exit is fine when *another* exit reaches the same position too — a properly `HOLD`-chained take-profit ladder, for example.
 
-**10. Watch unit scale.** ROI-flavored percentages are whole numbers (`18` means +18%, not `0.18`). Probability thresholds (`IMPLIED_PROBABILITY`) are `0`–`1`. A value like `0.18` on a field that expects a whole-number percent is almost always a scale mistake.
+**10. Watch unit scale.** ROI-flavored percentages (an `ROI_PCT` threshold, entry-ladder tier sizes, take-profit tier sizes) are whole numbers (`18` means +18%, not `0.18`). Probability thresholds (`IMPLIED_PROBABILITY`) are `0`–`1`. A value like `0.18` on a field that expects a whole-number percent is almost always a scale mistake.
 
 **11. Every venue has a minimum order.** Polymarket's CLOB takes at least $1 per order: any leaf allocation that resolves to less than $1 of the strategy's principal is rejected when you post. A Hyperliquid perp order needs at least $10 of position size (margin times leverage), checked when the order is placed. `validate` catches neither, since both depend on `initial_principal_usd` and the full allocation chain.
 
@@ -105,7 +113,7 @@ An **edge** links an ACTION to the CONDITION that follows it (`ACTION -> CONDITI
 
 **14. A tokenized stock is priced in dollars, and a condition on it says so.** `BASE_STOCKS` legs (B20 equities on Base — AAPLc, TSLAc, NVDAc and others) execute as token swaps, not as Polymarket orders, and are watched through the share's reference price feed — or, for a stock with no feed yet (MUc, PLTRc), the pool's 15-minute average price. `stocks show` reports which as `conditionPriceSource`. Three consequences:
 
-- A condition watching a stock uses `signal: "PRICE_USD"` with the threshold in dollars per share: `"threshold": 400` means $400.00. `validate` rejects `IMPLIED_PROBABILITY` on a stock watch, `PRICE_USD` on a prediction market, and a non-positive dollar threshold. "If TSLA crosses $400, buy it" is `{ watch: <TSLAc>, signal: "PRICE_USD", trigger: "CROSS_ABOVE", threshold: 400 }`.
+- A condition watching a stock uses `signal: "PRICE_USD"` with the threshold in dollars per share: `"threshold": 400` means $400.00. A percent return on the stock position itself is `ROI_PCT` (rule 2). `validate` rejects `IMPLIED_PROBABILITY` on a stock watch, `PRICE_USD` on a prediction market, and a non-positive dollar threshold. "If TSLA crosses $400, buy it" is `{ watch: <TSLAc>, signal: "PRICE_USD", trigger: "CROSS_ABOVE", threshold: 400 }`.
 - A stock never resolves. `TIME_TO_RESOLUTION_SECONDS` on a stock watch is rejected; use `PRICE_USD` or an absolute time. A stock leg with no exit condition is sold when the strategy finishes.
 - Its price is dollars per share, not a 0–1 probability. Never apply rule 3's 3¢/97¢ sanity check to it. Where there is a feed, the condition watches the *reference* price (what the share is worth); the pool price `stocks show` reports is what a swap pays, typically a fraction of a percent above it. Where there is not, the condition watches the pool's 15-minute average, which trails the pool price after a fast move.
 
@@ -121,7 +129,7 @@ Three registry tokens (COINc, CRCLc, INTCc) have no pool and cannot be traded; `
 
 **15. A perp is a leveraged dollar position with two sides, not a market that resolves.** `HYPERLIQUID` legs are USDC-margined perpetuals on Hyperliquid, watched by their **mark price in dollars**. There are two kinds: perps on Hyperliquid's main dex (crypto: BTC, ETH, SOL; cross margin), and HIP-3 perps listed by other providers on the `xyz`, `para`, `io`, and `mkts` dexes (stocks, indices, commodities, FX, rates, and pre-IPO names such as `xyz:NVDA` or `para:10Y`; always isolated margin). Consequences:
 
-- **Units are dollars of mark price.** A condition on a perp uses `signal: "PRICE_USD"` with the threshold in dollars (`"threshold": 82000` means $82,000). `validate` rejects `IMPLIED_PROBABILITY` on a perp watch. Never apply rule 3's 3¢/97¢ check to a perp price.
+- **Units are dollars of mark price.** A condition on a perp uses `signal: "PRICE_USD"` with the threshold in dollars (`"threshold": 82000` means $82,000). A percent return on the perp position itself is `ROI_PCT`, measured on margin (rule 2). `validate` rejects `IMPLIED_PROBABILITY` on a perp watch. Never apply rule 3's 3¢/97¢ check to a perp price.
 - **The side is `LONG` or `SHORT`, and both are real trades.** A `SHORT` profits when the mark falls; there is no `YES`/`NO`. A `SHORT` is not "the NO side" of a `LONG`: opposite sides of the same perp in one strategy net against each other on the exchange, and opening one while the other is held is refused. An exit (`MOVE_TO_WALLET`) closes whichever side is open.
 - **`leverage` lives on `action.target`, is an integer, and defaults to 1.** `validate` enforces 1–50; the exchange enforces the asset's own `maxLeverage` (`perps show` reports it, and refuses `--leverage` above it). Leverage scales exposure, not capital: `allocation_pct` is still the share of capital posted as margin. A 3x long with $100 of margin holds $300 of the asset.
 - **Liquidation fires before your exit does.** A stop authored beyond the position's liquidation price never runs. For a `SHORT`, a stop is a `CROSS_ABOVE` above the entry; for a `LONG`, a `CROSS_BELOW` below it.
@@ -184,9 +192,9 @@ A strategy funds its perp legs itself: posting one moves USDC to Hyperliquid on 
 }
 ```
 
-### Entry, then a single take-profit at an absolute price (rules 1, 2, 7)
+### Entry, then a single take-profit at +20% (rules 1, 2, 7)
 
-Enter unconditionally, exit at an absolute price computed from the ROI target — not `ROI_PCT`. Entering near 50¢, +20% ROI converts to an exit threshold of ~60¢.
+Enter unconditionally, then exit at a +20% return with `ROI_PCT`, watching the same token the entry bought. Filled at 0.50 with a 3.3% entry fee, Miramarket arms this at about 0.62 — you never write that number.
 
 ```json
 {
@@ -213,10 +221,10 @@ Enter unconditionally, exit at an absolute price computed from the ROI target �
       "type": "CONDITION",
       "level": 1,
       "condition": {
-        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES" },
-        "signal": "IMPLIED_PROBABILITY",
+        "watch": { "venue": "POLYMARKET", "market_id": "<market-id>", "outcome_token": "YES", "token_id": "<token-id>" },
+        "signal": "ROI_PCT",
         "trigger": "CROSS_ABOVE",
-        "threshold": 0.6
+        "threshold": 20
       }
     },
     {
@@ -429,7 +437,8 @@ miramarket-cli schema --format=ts
 #    request named may have been substituted or left out, disclosed there.
 miramarket-cli strategies generate "buy YES on <market> below 40c, sell at 70c" --out ./strategy.json --json
 
-# 4. Validate — structural errors only, see "what validate checks" above
+# 4. Validate — structural errors and ROI_PCT placement and reach only,
+#    see "what validate checks" above
 miramarket-cli validate ./strategy.json --json
 
 # 5. Preview — no server contact, surfaces fields dropped at import
@@ -478,7 +487,8 @@ Rules that apply on top of the ones above:
 - **Treating `auth status` or `account status` exit `0` as "ready."** Both always exit `0` — read `authenticated` / `ready` in the payload.
 - **Not re-validating after editing.** `edit` always exits `0` even when the result fails validation — check `valid` and `errors` in its envelope.
 - **Editing the local file when you meant the posted strategy.** `edit` never reaches the server. A running strategy changes only through `strategies pull` and `strategies update`, and only in its future nodes.
-- **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; any `ROI_PCT`/`PNL_USD` signal is also flagged there.
+- **Ignoring `preview` warnings.** Fields like `conjuncts`, `stabilizers`, and `priority_order` pass `validate` but are silently dropped at import; a `PNL_USD` signal is also flagged there (use `ROI_PCT` instead, rule 2).
+- **Converting a percent exit to a price by hand.** "Take profit at +20%" is an `ROI_PCT` condition under the buy. A price you computed from today's quote ignores the real fill and the entry fee.
 - **Using `LIMITLESS` as a venue.** It's accepted by the schema but has no execution path — `POLYMARKET`, `BASE_STOCKS`, and `HYPERLIQUID` are the tradeable venues.
 - **Treating a stock's or perp's price as a probability.** `stocks show`, `stocks history`, `perps show`, and `perps history` report dollars. A `BASE_STOCKS` or `HYPERLIQUID` condition uses `PRICE_USD` with a dollar threshold (rules 14 and 15), never `IMPLIED_PROBABILITY`.
 - **Upper-casing or hand-typing a perp id.** Copy `hl:<COIN>` or `hl:<dex>:<COIN>` exactly as `perps list` prints it, or take the whole block from `perps show`.

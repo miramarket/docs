@@ -26,6 +26,9 @@ Use this checklist after a successful simulation and before **Run Live**, which 
 - Does a time condition use the intended close time or specific time?
 - Is a stock or perp threshold a price in dollars, not a probability?
 - Is a short's stop-loss above the entry price, and a long's below it?
+- Is an ROI Condition below the buy it should measure, with `+` for a take-profit and `-` for a stop-loss?
+- Is an ROI stop-loss looser than the fee you pay to buy? On Polymarket, keep it at `-8%` or beyond.
+- Can each take-profit be reached? A prediction-market share never trades above `$1`.
 
 ## Check the action
 
