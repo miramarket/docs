@@ -163,7 +163,7 @@ Diagnoses trade-readiness across auth, API reachability, region availability, po
   "checks": {
     "auth": { "ok": true, "did": "did:privy:...", "expiresAt": "..." },
     "api": { "ok": true },
-    "geo": { "ok": true, "country": "GB" },
+    "geo": { "ok": true, "country": "GB", "exempt": false },
     "policies": { "ok": false, "accepted": false },
     "wallet": { "ok": true, "delegated": true, "depositWalletAddress": "0x..." },
     "capital": { "ok": true, "cashAtomic": 50000000 }
@@ -174,6 +174,8 @@ Diagnoses trade-readiness across auth, API reachability, region availability, po
 If `humanRequired` is `true` on a blocker (not authenticated, wallet not delegated, policies not accepted, region-restricted), surface `requiredAction` and stop — an agent should never attempt to work around these.
 
 Blocker codes: `NOT_AUTHENTICATED`, `API_UNREACHABLE`, `REGION_RESTRICTED`, `POLICIES_NOT_ACCEPTED`, `WALLET_NOT_DELEGATED`, `WALLET_CHECK_FAILED`.
+
+The region check is sent with your login when there is one. An account that is exempt from the region rules reads as available: `checks.geo.exempt` is `true` and there is no `REGION_RESTRICTED` blocker. Logged out, the check reports the region's own rules.
 
 ### `miramarket-cli account setup [--json]`
 
@@ -284,6 +286,14 @@ Validates a strategy JSON file's structure, including where each `ROI_PCT` condi
 }
 ```
 
+`warnings[]` lists each entry buy under Polymarket's minimum order at the price now: $1, and the market's minimum size (5 shares unless its order book says otherwise) at the price the buy is expected to fill at. That price is the best ask for a straight buy, or the gate's level for a buy that waits on a price. Each entry is `{ "message": "..." }`, and the message says what the buy gets and what the venue needs, for example:
+
+```text
+Buy b: your $250.00 gives $2.01 to 3215007 (NO); Polymarket needs $3.00 there (5 shares at about 60c; this buys about 3.4).
+```
+
+A warning does not fail the command, because the price can move before the buy fires. Raise `initial_principal_usd` or the buy's `allocation_pct`. Only the buys a run opens with are judged: a later buy is funded by what an earlier leg returned, and perps and stocks are not judged.
+
 ### `miramarket-cli preview <file> [--json]`
 
 Summarizes a strategy without contacting the server — node/edge counts, required principal, and `warnings[]` for anything that will be silently dropped or misbehave at import, including any `PNL_USD` condition (compared as a raw value). `ROI_PCT` is not warned on: Miramarket arms it from the real fill of the `BUY` above it.
@@ -326,9 +336,12 @@ Validates and posts a strategy, then starts a run (unless `--no-start`). Like `v
   "strategyId": "k97abc123...",
   "runId": "k97xyz456...",
   "name": "eth-momentum-v1",
-  "demo": false
+  "demo": false,
+  "warnings": []
 }
 ```
+
+The envelope also carries `warnings[]`: the same minimum-order warnings `validate` reports, empty when there are none. A warning does not stop the post, and a live run within the login's budget has already started by the time you read this response. To review warnings before trading begins, run `validate` first, or post with `--no-start`.
 
 A live start beyond the login's budget posts the strategy but starts nothing (`started: false`, `runId: null`) and returns the approval to wait on:
 
@@ -362,9 +375,12 @@ None of these require authentication.
 | --- | --- |
 | `markets list [--limit <n>] [--offset <n>]` | Lists Polymarket events by id, title, volume. |
 | `markets search <query> [--limit <n>]` | Searches events by keyword, sorted by relevance. |
-| `markets show <eventId>` | Full event detail: description, end date, volume, liquidity, and each sub-market's outcome prices and CLOB token IDs. |
-| `markets orderbook <tokenId> [--depth <n>]` | Live top bids/asks for a CLOB token. |
-| `markets prices-history <market> [--interval <interval>]` | Price history; `--interval` is one of `1h`, `6h`, `1d`, `1w`, `1m`, `max`. |
+| `markets resolve <handle>` | Every id a market goes by, from any one of them — see below. |
+| `markets show <handle>` | Full event detail: description, end date, volume, liquidity, and each market's outcome prices and ids (`id`, `conditionId`, `slug`, `yesTokenId`, `noTokenId`, `clobTokenIds`). Takes an event id or any handle `markets resolve` takes; given a market's handle, it shows the event that market belongs to. |
+| `markets orderbook <handle> [--depth <n>] [--outcome yes\|no]` | Live top bids and asks for an outcome token, best first (highest bid, lowest ask). |
+| `markets prices-history <handle> [--interval <interval>] [--outcome yes\|no]` | Price history for an outcome token; `--interval` is one of `1h`, `6h`, `1d`, `1w`, `1m`, `max`. |
+
+`markets orderbook` and `markets prices-history` take a token id, or any handle that names one market (market id, condition id, market slug, or link). `--outcome` picks the side to read when the handle is not itself a token id (default `yes`), and the envelope's `tokenId` is the token that was read. A handle that names several markets, such as an event, exits `5` and lists them. A handle nothing answers to also exits `5`.
 
 ```json
 {
@@ -373,10 +389,48 @@ None of these require authentication.
   "id": "abc123",
   "title": "Will X happen?",
   "markets": [
-    { "id": "...", "question": "...", "outcomePrices": ["0.62", "0.38"], "clobTokenIds": ["...", "..."] }
+    { "id": "...", "conditionId": "0x...", "slug": "...", "question": "...", "outcomePrices": ["0.62", "0.38"], "yesTokenId": "...", "noTokenId": "...", "clobTokenIds": ["...", "..."] }
   ]
 }
 ```
+
+### `miramarket-cli markets resolve <handle> [--json]`
+
+Resolves any Polymarket handle to every id the market goes by. Each place wants a different one: a strategy node names the **market id** and an outcome **token id**, the order book and price history read a **token id**, Polymarket's order system names a market by its **condition id**, and the site's URL carries **slugs**. Give this command any one of them and it returns all of them.
+
+`<handle>` is an outcome token id, a condition id (`0x` followed by 64 hex characters), a market id, an event id, a market or event slug, or a `polymarket.com/event/...` link. Closed markets are found too.
+
+```json
+{
+  "ok": true,
+  "command": "markets resolve",
+  "handle": "0x8a4196617dcb703e49d9bb36d3847bf6a75fd364dbd19f8d408ac944bf1a03d8",
+  "found": true,
+  "matches": [
+    {
+      "handle": "0x8a41...03d8",
+      "matchedAs": "condition_id",
+      "markets": [
+        {
+          "marketId": "3215008",
+          "conditionId": "0x8a4196617dcb703e49d9bb36d3847bf6a75fd364dbd19f8d408ac944bf1a03d8",
+          "slug": "will-the-fed-increase-interest-rates-by-25-bps-after-the-december-2026-meeting",
+          "question": "Will the Fed increase interest rates by 25 bps after the December 2026 meeting?",
+          "yesTokenId": "1116621296...",
+          "noTokenId": "9448396543...",
+          "eventId": "51456",
+          "eventSlug": "fed-decision-in-december",
+          "closed": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+`matchedAs` is `token_id`, `condition_id`, `market_id`, `event_id`, `market_slug`, or `event_slug`. An event match also carries `event: { eventId, slug, title }` and lists every market of the event. A short number can be a market id and an event id at once: both readings are returned. When nothing answers, the result is `found: false` with exit `0`, not an error.
+
+Exit codes: `0` ok (including `found: false`), `4` market data unreachable, `5` empty handle.
 
 ## Tokenized stock commands
 
@@ -610,8 +664,8 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | --- | --- |
 | `strategies generate [prompt] [--out <file>]` | Build a strategy from a plain-English description — see [Strategy authoring commands](#strategy-authoring-commands). |
 | `strategies list` | Every strategy you own, with status and latest run info. |
-| `strategies show <strategyId> [--verbose]` | Detail for one strategy; `--verbose` adds per-node PnL, executed trades, and settlement detail. |
-| `strategies runs <strategyId> [--limit <n>]` | Run history, most recent first. |
+| `strategies show <strategyId> [--verbose]` | Detail for one strategy, with what its latest run has made and still holds — see below. `--verbose` adds per-node PnL, executed trades, settlement detail, and `openPositions[]`. |
+| `strategies runs <strategyId> [--limit <n>]` | Run history, most recent first. Each run carries the same money figures as `strategies show`, and `openPositions[]`. |
 | `strategies watch <strategyId> [flags]` | Polls until the run reaches a terminal status — see below. |
 | `strategies rename <strategyId> <name>` | Rename (1–120 characters). |
 | `strategies pull <strategyId> [--out <file>]` | Download a posted strategy as authoring JSON, with the node keys its active run has locked — see below. |
@@ -620,6 +674,22 @@ Exit codes: `0` ok, `3` auth error, `4` server error, `5` bad input.
 | `strategies cancel <runId>` | Cancel an active run. |
 | `strategies exit <strategyId>` | Close a **completed** strategy, freeing its locked principal. |
 | `strategies delete <strategyId> --confirm` | Permanently delete a **draft** strategy (never started). |
+
+### What a run has made and still holds
+
+`strategies show` and `strategies runs` report a run's money as three figures:
+
+| Field | Meaning |
+| --- | --- |
+| `realizedPnlUsd` | Profit or loss on closed positions only. A run that just bought shows `null` here. |
+| `openValueUsd` | What the run still holds, at each position's last polled price. |
+| `unrealizedPnlUsd` | That value less what the positions cost. |
+
+`realizedPnlUsd` and `unrealizedPnlUsd` together are the run's whole profit or loss so far. Do not value an open position from its cost alone: a fresh $11 buy is worth about $11, not $0.
+
+Each entry in `openPositions[]` has its own `valueUsd`, `unrealizedPnlUsd`, and `valuedAt`. `valuedAt` is `"mark"` when the value comes from the last polled price, and `"cost"` when no price has been read yet.
+
+After a partial exit, a position keeps its full cost until it closes, so `unrealizedPnlUsd` also counts what the exits already returned (`openPositions[].bankedProceedsUsd`). For example, with ten shares bought for $100, five sold for $50, and the five left worth $10 each, `unrealizedPnlUsd` is $0, not -$50. A perp's figure covers only the size still held.
 
 ### `strategies watch <strategyId> [flags]`
 
