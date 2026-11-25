@@ -341,7 +341,7 @@ Validates and posts a strategy, then starts a run (unless `--no-start`). Like `v
 }
 ```
 
-The envelope also carries `warnings[]`: the same minimum-order warnings `validate` reports, empty when there are none. The strategy is posted anyway, so read them before a live run.
+The envelope also carries `warnings[]`: the same minimum-order warnings `validate` reports, empty when there are none. A warning does not stop the post, and a live run within the login's budget has already started by the time you read this response. To review warnings before trading begins, run `validate` first, or post with `--no-start`.
 
 A live start beyond the login's budget posts the strategy but starts nothing (`started: false`, `runId: null`) and returns the approval to wait on:
 
