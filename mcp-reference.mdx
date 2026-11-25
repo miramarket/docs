@@ -88,13 +88,17 @@ Money committed to running strategies and pending withdrawals. No input. Needs `
 
 The account's strategies, newest first: name, status, money, how the latest run stands, and a link. Needs `account:read`. `strategy_show` has a strategy's nodes.
 
+Each row's `latestRun` reports its money as `realizedPnlUsd` (closed positions only), `openPositions` (how many it still holds), and `openValueUsd` and `unrealizedPnlUsd` for those positions at their last polled price. A run that just bought shows only in the open figures.
+
 | Input | Type | |
 | --- | --- | --- |
 | `include_archived` | boolean | Also list archived strategies. Default `false`; the result's `archivedNotShown` counts the ones left out. |
 
 ### `strategy_show`
 
-One strategy: its nodes, status, principal (`initialPrincipalUsd`), latest run, and `url`, its page in the app. Needs `account:read`.
+One strategy: its nodes, status, principal (`initialPrincipalUsd`), runs, and `url`, its page in the app. Needs `account:read`.
+
+Each run's `realizedPnlUsd` covers closed positions only. What it still holds is in `openPositions`, each with `valueUsd`, `unrealizedPnlUsd`, and `valuedAt` (`"mark"` for the last polled price, `"cost"` when no price has been read yet), totalled in `openValueUsd` and `unrealizedPnlUsd`. Do not value an open position from its cost alone: a fresh buy is worth about what it cost, not $0.
 
 | Input | Type | |
 | --- | --- | --- |
@@ -180,7 +184,9 @@ Checks a strategy JSON with the same validator `strategy_post` uses.
 | --- | --- | --- |
 | `strategy` | object | Required. |
 
-Returns `{ "valid": boolean, "errors": string[] }`. Besides the structure, it refuses an `ROI_PCT` take-profit no price can reach, judged from the token's best ask now, or from the level of the price condition the buy waits on when that is its only condition and it watches the same token (a buy behind any other condition is not judged): for example `+20%` on a share that costs `0.90` would need `1.08`. Lower the take-profit or leave it out, and tell the user why. Passing does not mean the strategy does what was intended; `strategy_guide` topic `"json"` lists the mistakes it cannot catch.
+Returns `{ "valid": boolean, "errors": string[], "warnings": string[] }`. Besides the structure, it refuses an `ROI_PCT` take-profit no price can reach, judged from the token's best ask now, or from the level of the price condition the buy waits on when that is its only condition and it watches the same token (a buy behind any other condition is not judged): for example `+20%` on a share that costs `0.90` would need `1.08`. Lower the take-profit or leave it out, and tell the user why. `warnings` lists each entry buy under Polymarket's minimum order at the price now ($1, and the market's minimum size, 5 shares unless its order book says otherwise), with what the buy gets and what the venue needs. A warning does not make the strategy invalid, because the price can move before the buy fires: raise the principal or that buy's allocation, and tell the user. Only the buys a run opens with are judged; perps and stocks are not.
+
+Passing does not mean the strategy does what was intended; `strategy_guide` topic `"json"` lists the mistakes it cannot catch.
 
 ### `strategy_post`
 
@@ -193,7 +199,7 @@ Validates and saves a strategy, refusing an unreachable `ROI_PCT` take-profit as
 | `mode` | `"draft"` (default) or `"demo"` | `"draft"` checks that its markets can be traded, then saves it unstarted, ready for `strategy_start_live`. `"demo"` saves it and starts a simulated run. |
 | `idempotency_key` | string | Recommended. See [Retrying safely](#retrying-safely). |
 
-Returns `{ strategyId, name, mode, runId, url, summary, links, next }`. `runId` is `null` for a draft. `url` is the strategy's page in the app; show the user `summary` and the link. A draft's page only shows it and has no run button: where no card shows, `strategy_start_live` starts it.
+Returns `{ strategyId, name, mode, runId, url, summary, links, next }`, plus `warnings` when an entry buy is under Polymarket's minimum order (the same warnings `strategy_validate` returns; the strategy is saved anyway). `runId` is `null` for a draft. `url` is the strategy's page in the app; show the user `summary` and the link. A draft's page only shows it and has no run button: where no card shows, `strategy_start_live` starts it.
 
 ### `strategy_start_live`
 
